@@ -394,6 +394,14 @@
     text-transform:uppercase;
     opacity:.4;
   }
+  .wmeta{
+    font-family:var(--mono);
+    font-size:9px;
+    letter-spacing:.05em;
+    opacity:.28;
+    white-space:nowrap;
+    min-height:11px;
+  }
 
   .views{
     margin-top:6px;
@@ -809,6 +817,7 @@
         </div>
         <div class="wtemp" id="wtemp">—</div>
         <div class="wdesc" id="wdesc">加载中</div>
+        <div class="wmeta" id="wmeta"></div>
       </div>
 
       <div class="cell time">
@@ -952,7 +961,10 @@
   const ptime     = document.getElementById('ptime');
   const ptrack    = document.getElementById('ptrack');
 
-  audio.volume = 0.175;
+  const VOL_KEY = 'home-vol';
+  let savedVol = null;
+  try { savedVol = parseFloat(localStorage.getItem(VOL_KEY)); } catch(err){}
+  audio.volume = (isFinite(savedVol) && savedVol >= 0 && savedVol <= 1) ? savedVol : 0.175;
 
   const fmt = s => {
     if (!isFinite(s) || s < 0) return '0:00';
@@ -960,13 +972,17 @@
   };
 
   const volSlider = document.getElementById('vol');
+  function saveVol(){
+    try { localStorage.setItem(VOL_KEY, String(audio.volume)); } catch(err){}
+  }
   function setVolume(v){
     const n = Math.min(1, Math.max(0, v));
     audio.volume = n;
     volSlider.value = String(Math.round(n * 100));
+    saveVol();
   }
   volSlider.value = String(Math.round(audio.volume * 100));
-  volSlider.addEventListener('input', () => { audio.volume = volSlider.value / 100; });
+  volSlider.addEventListener('input', () => { audio.volume = volSlider.value / 100; saveVol(); });
   volSlider.addEventListener('click', e => e.stopPropagation());
 
   const canHover = window.matchMedia('(hover: hover)').matches;
@@ -1466,15 +1482,21 @@
   (async () => {
     const tEl = document.getElementById('wtemp');
     const dEl = document.getElementById('wdesc');
+    const mEl = document.getElementById('wmeta');
     try{
       const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + CITY.lat +
                   '&longitude=' + CITY.lon +
-                  '&current=temperature_2m,weather_code&timezone=auto';
+                  '&current=temperature_2m,apparent_temperature,weather_code' +
+                  '&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto';
       const r = await fetch(url);
       const j = await r.json();
       const code = j.current.weather_code;
+      const est = Math.round(j.current.apparent_temperature);
+      const hi = Math.round(j.daily.temperature_2m_max[0]);
+      const lo = Math.round(j.daily.temperature_2m_min[0]);
       tEl.textContent = Math.round(j.current.temperature_2m) + '°';
       dEl.textContent = WMO[code] || '—';
+      mEl.textContent = '体感 ' + est + '° · ' + lo + '° / ' + hi + '°';
 
       const applied = fxPreview || weatherFXType(code);
       startWeatherFX(applied);
@@ -1488,12 +1510,13 @@
     }catch(err){
       tEl.textContent = '—';
       dEl.textContent = '暂时取不到';
+      mEl.textContent = '';
       if (fxPreview){ startWeatherFX(fxPreview); markFxBtn(fxPreview); }
       pickInitial();
     }
   })();
 
-  const COUNT_KEY = 'guests';
+  const COUNT_KEY = 'visitors';
   const SEEN_KEY  = 'linsong-home-seen';
   const viewsEl   = document.getElementById('views');
   const showViews = n => { viewsEl.textContent = n.toLocaleString('en-US') + ' views'; };
@@ -1504,8 +1527,7 @@
   }
   function cookieSet(k, v, days){
     try{
-      document.cookie = k + '=' + v + '; path=/; max-age=' + (days * 86400) +
-                        '; SameSite=Lax; domain=.agentos-app.run';
+      document.cookie = k + '=' + v + '; path=/; max-age=' + (days * 86400) + '; SameSite=Lax';
     }catch(err){}
   }
 
@@ -1539,7 +1561,7 @@
     categoryId: 'DIC_kwDOVOaJJs4DI4RA',
     mapping:        'pathname',
     inputPosition:  'top',
-    theme:          'dark'
+    theme:          'https://linsonghuu.github.io/giscus-theme.css'
   };
 
   const gb = document.getElementById('guestbook');
