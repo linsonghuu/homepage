@@ -70,3 +70,83 @@ main .Color,
 main .btn-primary{
   border-radius: 9px;
 }
+
+/* ---------- 去掉 giscus 署名 ---------- */
+main .gsc-header em,
+main .gsc-header .gsc-left-header em{
+  display: none !important;
+}
+main .gsc-header h4{
+  margin-bottom: 4px;
+}
+
+/* ---------- 评论输入区统一成卡片质感 ---------- */
+main .gsc-comment-box{
+  border-color: rgba(255,255,255,.09) !important;
+  border-radius: 14px;
+  box-shadow: none;
+}
+main .gsc-comment-box-tabs{
+  background: transparent !important;
+  border-color: rgba(255,255,255,.07) !important;
+}
+main .gsc-comment-box-tabs > .mx-2{
+  margin-left: 10px !important;
+}
+main .gsc-comment-box-tabs button{
+  border-radius: 10px 10px 0 0 !important;
+}
+main .gsc-comment-box-tabs .gsc-toolbar-item{
+  border-radius: 8px;
+  opacity: .5;
+  transition: opacity .16s ease, background .16s ease;
+}
+main .gsc-comment-box-tabs .gsc-toolbar-item:hover{
+  opacity: 1;
+  background: rgba(255,255,255,.06);
+}
+
+main .gsc-comment-box-main{
+  padding: 12px;
+}
+main .gsc-comment-box-textarea{
+  border-radius: 11px !important;
+  border-color: rgba(255,255,255,.09) !important;
+  background: rgba(255,255,255,.03) !important;
+  font-size: 13px;
+  line-height: 1.7;
+}
+main .gsc-comment-box-textarea:focus{
+  border-color: rgba(255,255,255,.2) !important;
+  box-shadow: none;
+  outline: none;
+}
+
+/* markdown 提示行（那个小图标+虚线框）做成幽灵样式 */
+main .gsc-comment-box-markdown-hint{
+  border: 1px dashed rgba(255,255,255,.12);
+  border-radius: 10px;
+  margin: 10px 12px 0 !important;
+  padding: 5px 10px;
+  opacity: .38;
+  font-size: 11px;
+}
+main .gsc-comment-box-markdown-hint:hover{
+  opacity: .7;
+}
+
+main .gsc-comment-box-bottom{
+  padding: 10px 12px 12px;
+}
+main .gsc-comment-box-bottom .btn{
+  border-radius: 10px;
+  font-size: 12px;
+  padding: 6px 15px;
+}
+
+main .btn-primary{
+  border-radius: 10px !important;
+}
+main .gsc-comment-box-buttons a.btn-primary{
+  border-radius: 10px;
+}
