@@ -266,6 +266,59 @@
   }
   .avatar img{width:100%;height:100%;object-fit:cover;display:block}
 
+  #avatarBtn{
+    position:relative;
+    z-index:6;
+    cursor:pointer;
+    transition:transform .28s cubic-bezier(.34,1.56,.64,1);
+    -webkit-tap-highlight-color:transparent;
+  }
+  #avatarBtn:hover{transform:scale(1.06) rotate(-3deg)}
+  #avatarBtn:focus-visible{outline:2px solid rgba(255,255,255,.4);outline-offset:3px}
+  #avatarBtn.pop{animation:avatarPop .5s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes avatarPop{
+    0%{transform:scale(1)}
+    35%{transform:scale(1.2) rotate(6deg)}
+    62%{transform:scale(.94) rotate(-3deg)}
+    100%{transform:scale(1)}
+  }
+  .quip{
+    position:absolute;
+    left:50%;
+    bottom:calc(100% + 12px);
+    transform:translate(-50%, 6px) scale(.86);
+    max-width:230px;
+    padding:7px 13px;
+    border-radius:13px;
+    background:rgba(16,16,16,.92);
+    border:1px solid rgba(255,255,255,.12);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    box-shadow:0 12px 30px -12px rgba(0,0,0,.95);
+    font-size:12px;
+    line-height:1.5;
+    letter-spacing:.02em;
+    color:#f2f2f2;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .22s ease, transform .28s cubic-bezier(.34,1.56,.64,1);
+    z-index:5;
+  }
+  .quip.show{opacity:1;transform:translate(-50%,0) scale(1)}
+  .quip::after{
+    content:"";
+    position:absolute;
+    top:100%;left:50%;
+    width:8px;height:8px;
+    margin:-4px 0 0 -4px;
+    background:rgba(16,16,16,.92);
+    border-right:1px solid rgba(255,255,255,.12);
+    border-bottom:1px solid rgba(255,255,255,.12);
+    transform:rotate(45deg);
+    border-radius:0 0 2px 0;
+  }
+
   .who{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;width:100%}
   .who .n{
     font-size:15px;
@@ -793,6 +846,12 @@
       gap:9px;
     }
     .cell{border-radius:22px;padding:18px 15px}
+    .quip{
+      max-width:190px;
+      white-space:normal;
+      font-size:11.5px;
+      bottom:calc(100% + 9px);
+    }
     .about p{max-width:none}
     .stack{gap:11px}
 
@@ -825,7 +884,10 @@
     <main class="bento">
 
       <div class="cell profile">
-        <div class="avatar"><img src="avatar.jpg" alt="linsongりんそん"></div>
+        <div class="avatar" id="avatarBtn" role="button" tabindex="0" aria-label="点一下头像">
+          <img src="avatar.jpg" alt="linsongりんそん">
+          <div class="quip" id="quip" role="status" aria-live="polite"><span id="quipText"></span></div>
+        </div>
         <div class="who">
           <span class="n">linsongりんそん</span>
           <span class="t">Quietly making waves.</span>
@@ -1740,6 +1802,49 @@
         btn.dataset.tip = oldTip;
       }, 1200);
     });
+  });
+
+  const QUIPS = [
+    '喵呜——骗你的啦，笨蛋',
+    '戳什么戳，很痒欸',
+    '哼，勉强回应你一下',
+    '杂鱼~就这点程度吗',
+    '才不会喜欢你呢，笨蛋',
+    '变态也会有想见的人吗？',
+    '再看？……那再看清楚点',
+    '笨、笨蛋！谁允许你碰了',
+    '再点就烦了！……再点一下也可以',
+    '哼，人家才不是在等你呢',
+    '看什么看，没见过美少女啊',
+    '仅此一次哦，下不为例',
+    '已经记住你了，跑不掉的',
+    '你手好冰，是故意的吧'
+  ];
+
+  const avatarBtn = document.getElementById('avatarBtn');
+  const quipEl    = document.getElementById('quip');
+  const quipText  = document.getElementById('quipText');
+  let lastQuip = -1;
+  let quipTimer = null;
+
+  function sayQuip(){
+    let i = lastQuip;
+    while (QUIPS.length > 1 && i === lastQuip){
+      i = Math.floor(Math.random() * QUIPS.length);
+    }
+    lastQuip = i;
+    quipText.textContent = QUIPS[i];
+    quipEl.classList.add('show');
+    avatarBtn.classList.remove('pop');
+    void avatarBtn.offsetWidth;
+    avatarBtn.classList.add('pop');
+    clearTimeout(quipTimer);
+    quipTimer = setTimeout(() => quipEl.classList.remove('show'), 2600);
+  }
+
+  avatarBtn.addEventListener('click', sayQuip);
+  avatarBtn.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); sayQuip(); }
   });
 </script>
 </body>
