@@ -199,13 +199,15 @@
   .time   {grid-area:time}
   .links  {grid-area:links}
   .weather{grid-area:weather}
+  .birthday{grid-area:birthday}
 
   .bento{
     display:grid;
     grid-template-columns:repeat(3,1fr);
     grid-template-areas:
       "profile about about"
-      "time    links weather";
+      "time    links weather"
+      "birthday birthday birthday";
     gap:11px;
   }
 
@@ -455,6 +457,45 @@
     white-space:nowrap;
     min-height:11px;
   }
+
+  .birthday{flex-direction:row;align-items:center;gap:18px;padding:16px 20px}
+  .birthday .h{margin:0;flex:none}
+  .bd-main{flex:1;min-width:0;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .bd-date{
+    font-family:var(--mono);
+    font-size:clamp(17px,2vw,21px);
+    font-weight:700;
+    letter-spacing:.06em;
+    font-variant-numeric:tabular-nums;
+    display:flex;align-items:baseline;gap:5px;
+  }
+  .bd-date i{opacity:.28;font-style:normal;font-weight:400}
+  .bd-note{
+    font-size:11.5px;
+    font-weight:500;
+    opacity:.42;
+    letter-spacing:.02em;
+    white-space:nowrap;
+  }
+  .bd-bar{
+    flex:none;
+    width:min(180px,26vw);
+    height:3px;
+    border-radius:99px;
+    background:rgba(255,255,255,.07);
+    overflow:hidden;
+  }
+  .bd-bar i{
+    display:block;height:100%;width:0;
+    border-radius:99px;
+    background:linear-gradient(90deg, rgba(255,255,255,.25), rgba(255,255,255,.72));
+    transition:width 1s cubic-bezier(.22,1,.36,1);
+  }
+  body.birthday-today .cell.birthday{
+    border-color:rgba(255,255,255,.22);
+    background:linear-gradient(158deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.045) 60%, rgba(255,255,255,.02) 100%);
+  }
+  body.birthday-today .bd-note{opacity:.9;color:#fff}
 
   .views{
     margin-top:6px;
@@ -842,7 +883,7 @@
     .bento{
       grid-template-columns:1fr;
       grid-template-areas:
-        "profile" "about" "time" "links" "weather";
+        "profile" "about" "time" "links" "weather" "birthday";
       gap:9px;
     }
     .cell{border-radius:22px;padding:18px 15px}
@@ -912,6 +953,18 @@
         <div class="wtemp" id="wtemp">—</div>
         <div class="wdesc" id="wdesc">加载中</div>
         <div class="wmeta" id="wmeta"></div>
+      </div>
+
+      <div class="cell birthday" id="birthdayCard">
+        <div class="h">
+          <svg viewBox="0 0 24 24"><path d="M12 3.2c.9 1 1.4 2 1.4 3a1.9 1.9 0 1 1-3.8 0c0-1 .5-2 1.4-3z"/><path d="M5 11.5h14l-1.2 8.2a1.6 1.6 0 0 1-1.6 1.3H7.8a1.6 1.6 0 0 1-1.6-1.3Z"/><path d="M5 15.5h14"/></svg>
+          Birthday
+        </div>
+        <div class="bd-main">
+          <div class="bd-date"><b>2006</b><i>·</i><b>11</b><i>·</i><b>21</b></div>
+          <div class="bd-note" id="bdNote">—</div>
+        </div>
+        <div class="bd-bar"><i id="bdFill"></i></div>
       </div>
 
       <div class="cell time">
@@ -1044,6 +1097,32 @@
   }
   tick();
   setInterval(tick, 1000);
+
+  const BDAY = { y: 2006, m: 11, d: 21 };
+
+  function bdayTick(){
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let next = new Date(now.getFullYear(), BDAY.m - 1, BDAY.d);
+    if (next < today) next = new Date(now.getFullYear() + 1, BDAY.m - 1, BDAY.d);
+    const isToday = next.getTime() === today.getTime();
+    const prev = new Date(next.getFullYear() - 1, BDAY.m - 1, BDAY.d);
+    const daysLeft = Math.round((next - today) / 86400000);
+    const age = next.getFullYear() - BDAY.y - (isToday ? 0 : 1);
+    const progress = Math.min(1, Math.max(0, (today - prev) / (next - prev)));
+
+    const note = document.getElementById('bdNote');
+    const fill = document.getElementById('bdFill');
+    if (isToday){
+      note.textContent = '生日快乐 · 今天 ' + age + ' 岁';
+      document.body.classList.add('birthday-today');
+    } else {
+      note.textContent = age + ' 岁 · 还有 ' + daysLeft + ' 天';
+    }
+    fill.style.width = (progress * 100).toFixed(1) + '%';
+  }
+  bdayTick();
+  setInterval(bdayTick, 3600000);
 
   const audio     = document.getElementById('audio');
   const pbtn      = document.getElementById('pbtn');
