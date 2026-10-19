@@ -266,9 +266,9 @@
   }
   .avatar img{width:100%;height:100%;object-fit:cover;display:block}
 
+  .cell.profile{position:relative;z-index:6}
   #avatarBtn{
     position:relative;
-    z-index:6;
     cursor:pointer;
     transition:transform .28s cubic-bezier(.34,1.56,.64,1);
     -webkit-tap-highlight-color:transparent;
@@ -285,8 +285,8 @@
   .quip{
     position:absolute;
     left:50%;
-    bottom:calc(100% + 12px);
-    transform:translate(-50%, 6px) scale(.86);
+    top:16px;
+    transform:translate(-50%, -100%) scale(.86);
     max-width:230px;
     padding:7px 13px;
     border-radius:13px;
@@ -305,7 +305,7 @@
     transition:opacity .22s ease, transform .28s cubic-bezier(.34,1.56,.64,1);
     z-index:5;
   }
-  .quip.show{opacity:1;transform:translate(-50%,0) scale(1)}
+  .quip.show{opacity:1;transform:translate(-50%,-100%) scale(1)}
   .quip::after{
     content:"";
     position:absolute;
@@ -886,8 +886,8 @@
       <div class="cell profile">
         <div class="avatar" id="avatarBtn" role="button" tabindex="0" aria-label="点一下头像">
           <img src="avatar.jpg" alt="linsongりんそん">
-          <div class="quip" id="quip" role="status" aria-live="polite"><span id="quipText"></span></div>
         </div>
+        <div class="quip" id="quip" role="status" aria-live="polite"><span id="quipText"></span></div>
         <div class="who">
           <span class="n">linsongりんそん</span>
           <span class="t">Quietly making waves.</span>
