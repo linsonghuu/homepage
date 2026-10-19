@@ -1083,6 +1083,17 @@
     loadTrack(cur, false);
     audio.preload = 'auto';
     try { audio.load(); } catch(err){}
+
+    audio.addEventListener('canplaythrough', startRest, { once: true });
+    setTimeout(startRest, 25000);
+  }
+
+  let restStarted = false;
+  function startRest(){
+    if (restStarted) return;
+    restStarted = true;
+    if (window.requestIdleCallback) requestIdleCallback(preloadRest, { timeout: 7000 });
+    else setTimeout(preloadRest, 3000);
   }
 
   const SNOW_CODES = [71, 73, 75, 77, 85, 86];
@@ -1094,6 +1105,7 @@
     const base = localOnly[cur] ? AUDIO_LOCAL : AUDIO_CDN;
     audio.src = base + t.src;
     artImg.src = base + t.cover;
+    try { artImg.fetchPriority = 'high'; } catch(err){}
     pTitle.textContent  = t.title;
     pArtist.textContent = t.artist;
     pfill.style.width = '0%';
@@ -1102,14 +1114,35 @@
     if (plist.classList.contains('show')) renderPlaylist();
   }
 
+  const prefetchQueue = [];
+  let prefetching = false;
+
+  function prefetchNext(){
+    if (prefetchQueue.length === 0){ prefetching = false; return; }
+    const i = prefetchQueue.shift();
+    if (preloaded[i]){ prefetchNext(); return; }
+    preloaded[i] = true;
+    prefetching = true;
+
+    const a = new Audio();
+    a.preload = 'auto';
+    let moved = false;
+    const advance = () => {
+      if (moved) return;
+      moved = true;
+      setTimeout(prefetchNext, 400);
+    };
+    a.addEventListener('canplaythrough', advance);
+    a.addEventListener('error', advance);
+    setTimeout(advance, 10000);
+    a.src = (localOnly[i] ? AUDIO_LOCAL : AUDIO_CDN) + PLAYLIST[i].src;
+  }
+
   function preloadRest(){
     PLAYLIST.forEach((t, i) => {
-      if (i === cur || preloaded[i]) return;
-      preloaded[i] = true;
-      const a = new Audio();
-      a.preload = 'auto';
-      a.src = (localOnly[i] ? AUDIO_LOCAL : AUDIO_CDN) + t.src;
+      if (i !== cur && !preloaded[i]) prefetchQueue.push(i);
     });
+    if (!prefetching) prefetchNext();
   }
 
   pNext.addEventListener('click', e => {
@@ -1147,15 +1180,14 @@
     gate.classList.add('gone');
     setTimeout(() => { gate.style.display = 'none'; }, 800);
     pickInitial();
-    setTimeout(() => { try { ensureGiscus(); } catch(err){} }, 4000);
+
+    if (window.requestIdleCallback) requestIdleCallback(() => { try { ensureGiscus(); } catch(err){} }, { timeout: 6000 });
+    else setTimeout(() => { try { ensureGiscus(); } catch(err){} }, 4500);
 
     audio.play().catch(() => {
       playerbar.classList.add('blocked');
       document.body.classList.add('need-tap');
     });
-
-    if (window.requestIdleCallback) requestIdleCallback(preloadRest, { timeout: 4000 });
-    else setTimeout(preloadRest, 2500);
   }
 
   gate.addEventListener('click', enterSite);
@@ -1272,6 +1304,7 @@
   const fxCanvas = document.getElementById('weather-fx');
   const fxCtx = fxCanvas.getContext('2d');
   let fxRAF = null, fxType = null, fxParticles = [], fxWind = 0, fxTime = 0;
+  let fxFrameStart = 0, fxFrameCost = 0;
 
   const RAIN_LAYERS = [
     { w: 0.7, a: 0.09 },
@@ -1369,6 +1402,7 @@
 
   function fxLoop(){
     if (!fxType){ fxRAF = null; return; }
+    fxFrameStart = performance.now();
     const w = fxCanvas.width, h = fxCanvas.height;
     fxCtx.clearRect(0, 0, w, h);
     fxTime += 0.008;
@@ -1439,8 +1473,19 @@
       fxCtx.stroke();
     }
 
+    fxFrameCost += performance.now() - fxFrameStart;
+
     fxRAF = requestAnimationFrame(fxLoop);
   }
+
+  function fxCheckPerf(){
+    if (fxFrameCost <= 30) return;
+    const floor = (fxType === 'heavyrain') ? 120 : 60;
+    const keep = Math.max(floor, Math.ceil(fxParticles.length / 2));
+    fxParticles.length = Math.min(fxParticles.length, keep);
+    fxFrameCost = 0;
+  }
+  setInterval(fxCheckPerf, 1000);
 
   function startWeatherFX(type){
     if (!type || type === fxType) return;
