@@ -948,6 +948,12 @@
   .diag .row span{text-align:right;font-family:var(--mono);font-size:11.5px;word-break:break-all;opacity:.92}
   .diag .re{margin-top:16px;font-size:11.5px;padding:8px 12px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;cursor:pointer;opacity:.8;text-align:center}
   .diag .re:hover{opacity:1;background:rgba(255,255,255,.09)}
+  .diag .fid{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:12px;padding:11px 14px;border:1px solid rgba(255,255,255,.14);border-radius:12px;background:rgba(255,255,255,.05)}
+  .diag .fid .fl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;flex:none}
+  .diag .fid .fv{font-family:var(--mono);font-size:18px;letter-spacing:.08em;color:#f5f5f5;text-align:right;word-break:break-all}
+  .diag .acts{display:flex;gap:10px;margin-top:16px}
+  .diag .acts .re{margin-top:0;flex:1}
+  .diag .re.done{opacity:1;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3)}
 
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important;animation:none!important}
@@ -2115,12 +2121,16 @@
   <div class="panel">
     <h3>访客信息 · Visitor Info <span class="x" id="diagClose" title="关闭">×</span></h3>
     <p class="note">以下为浏览器在不请求任何权限（无定位 / 摄像头 / 通讯录等弹窗）的前提下，可直接读取的信息。仅你本人输入口令可见，访客无感。</p>
+    <div class="fid"><span class="fl">访客指纹 ID</span><span class="fv" id="fpId">—</span></div>
     <div class="grp"><div class="gt">身份 / Identity</div><div id="gIdentity"></div></div>
     <div class="grp"><div class="gt">硬件 / Hardware</div><div id="gHardware"></div></div>
     <div class="grp"><div class="gt">屏幕 / Screen</div><div id="gScreen"></div></div>
     <div class="grp"><div class="gt">网络 / Network</div><div id="gNetwork"></div></div>
     <div class="grp"><div class="gt">指纹 / Fingerprint</div><div id="gFinger"></div></div>
-    <div class="re" id="diagRefresh">↻ 刷新</div>
+    <div class="acts">
+      <div class="re" id="diagRefresh">↻ 刷新</div>
+      <div class="re" id="diagCopy">⧉ 复制全部</div>
+    </div>
   </div>
 </div>
 
@@ -2155,12 +2165,18 @@
       try{
         var c=document.createElement('canvas');
         var gl=c.getContext('webgl')||c.getContext('experimental-webgl');
-        if(!gl) return {renderer:'n/a',vendor:'n/a',hash:hash('none')};
+        if(!gl) return {renderer:'n/a',vendor:'n/a',hash:hash('none'),version:'—',shading:'—',maxTex:'—',ext:0};
         var dbg=gl.getExtension('WEBGL_debug_renderer_info');
         var r=dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
         var v=dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR);
-        return {renderer:r,vendor:v,hash:hash(r+'|'+v)};
-      }catch(e){ return {renderer:'n/a',vendor:'n/a',hash:'n/a'}; }
+        return {
+          renderer:r, vendor:v, hash:hash(r+'|'+v),
+          version: gl.getParameter(gl.VERSION) || '—',
+          shading: gl.getParameter(gl.SHADING_LANGUAGE_VERSION) || '—',
+          maxTex: gl.getParameter(gl.MAX_TEXTURE_SIZE) || '—',
+          ext: gl.getSupportedExtensions ? gl.getSupportedExtensions().length : 0
+        };
+      }catch(e){ return {renderer:'n/a',vendor:'n/a',hash:'n/a',version:'—',shading:'—',maxTex:'—',ext:0}; }
     }
 
     function collect(){
@@ -2172,33 +2188,44 @@
       [gi,gh,gs,gn,gf].forEach(function(g){ g.innerHTML=''; });
 
       var ua = navigator.userAgent;
-      var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '—';
+      var uaData = navigator.userAgentData;
+      var brands = (uaData && uaData.brands) ? uaData.brands.map(function(b){ return b.brand + ' ' + b.version; }).join(', ') : '—';
+      var plat = (uaData && uaData.platform) || navigator.platform || '—';
       var lang = (navigator.languages && navigator.languages.join(', ')) || navigator.language || '—';
       var tz = (function(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){ return '—'; } })();
       var off = -new Date().getTimezoneOffset()/60;
+      var online = navigator.onLine ? '在线' : '离线';
       row(gi,'User Agent', ua);
       row(gi,'平台 / Platform', plat);
+      row(gi,'UA Client Hints', brands);
+      row(gi,'厂商 / Vendor', navigator.vendor || '—');
       row(gi,'语言 / Languages', lang);
       row(gi,'时区 / Timezone', tz + '  (UTC' + (off>=0?'+':'') + off + ')');
       row(gi,'本地时间', new Date().toLocaleString());
+      row(gi,'网络状态', online);
 
       var cores = navigator.hardwareConcurrency || '—';
       var mem = navigator.deviceMemory ? navigator.deviceMemory + ' GB' : '—';
       var touch = navigator.maxTouchPoints || 0;
       var pointer = matchMedia('(pointer:fine)').matches ? '精确（鼠标）' : (matchMedia('(pointer:coarse)').matches ? '粗略（触摸）' : '—');
       var dnt = navigator.doNotTrack==='1' || window.doNotTrack==='1' ? '开启' : '未开启 / 未知';
+      var heap = (performance && performance.memory && performance.memory.usedJSHeapSize) ? (performance.memory.usedJSHeapSize/1048576).toFixed(1)+' MB' : '—';
       row(gh,'CPU 核心数', cores);
       row(gh,'内存 / Device Memory', mem);
       row(gh,'最大触摸点', touch);
       row(gh,'指针类型', pointer);
+      row(gh,'是否自动化', navigator.webdriver ? '是（疑似爬虫/自动化）' : '否');
       row(gh,'Do Not Track', dnt);
+      row(gh,'Global Privacy Ctrl', navigator.globalPrivacyControl ? '开启' : '未开启');
       row(gh,'Cookie 启用', navigator.cookieEnabled ? '是' : '否');
+      row(gh,'JS 堆内存', heap);
 
       row(gs,'分辨率', screen.width + ' × ' + screen.height);
       row(gs,'可用区域', screen.availWidth + ' × ' + screen.availHeight);
       row(gs,'像素比 DPR', window.devicePixelRatio);
       row(gs,'色彩深度', screen.colorDepth + ' bit');
       row(gs,'窗口大小', window.innerWidth + ' × ' + window.innerHeight);
+      row(gs,'屏幕方向', screen.orientation ? screen.orientation.type : '—');
 
       var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
       row(gn,'连接类型', conn ? (conn.effectiveType || conn.type || '—') : '—');
@@ -2209,11 +2236,22 @@
       row(gn,'地理位置', '查询中…');
       row(gn,'运营商 / ISP', '查询中…');
 
+      var cfp = canvasFP();
       var w = webglInfo();
-      row(gf,'Canvas 指纹', canvasFP());
+      var fpRaw = [ua, plat, cfp, w.hash, screen.width+'x'+screen.height, window.devicePixelRatio, tz, lang, cores, mem].join('|');
+      var fpId = (hash(fpRaw) + '00000000').slice(0,8);
+      var fpDisp = fpId.slice(0,4).toUpperCase() + ' ' + fpId.slice(4,8).toUpperCase();
+      var fpEl = document.getElementById('fpId');
+      if(fpEl) fpEl.textContent = fpDisp;
+      row(gf,'复合指纹 ID', fpDisp);
+      row(gf,'Canvas 指纹', cfp);
       row(gf,'WebGL 指纹', w.hash);
       row(gf,'GPU 渲染器', w.renderer);
       row(gf,'GPU 厂商', w.vendor);
+      row(gf,'WebGL 版本', w.version);
+      row(gf,'着色器版本', w.shading);
+      row(gf,'最大纹理', w.maxTex);
+      row(gf,'扩展数量', w.ext);
 
       // 无权限、非定位的 IP 地理查询（仅读取网络层信息，不弹任何授权）
       // 主用 ipwho.is，失败回退 ipinfo.io，二者均开启 CORS
@@ -2250,8 +2288,36 @@
       }
       if(e.key==='Escape') closeDiag();
     });
+    function copyReport(){
+      var lines = ['=== 访客信息 Visitor Info ===', '指纹 ID: ' + document.getElementById('fpId').textContent];
+      document.querySelectorAll('#diag .grp').forEach(function(g){
+        var t = g.querySelector('.gt'); if(!t) return;
+        lines.push('\n[' + t.textContent + ']');
+        g.querySelectorAll('.row').forEach(function(r){
+          var b=r.querySelector('b'), s=r.querySelector('span');
+          if(b&&s) lines.push('  ' + b.textContent + ': ' + s.textContent);
+        });
+      });
+      var text = lines.join('\n');
+      function flash(){
+        var btn=document.getElementById('diagCopy');
+        btn.textContent='✓ 已复制'; btn.classList.add('done');
+        setTimeout(function(){ btn.textContent='⧉ 复制全部'; btn.classList.remove('done'); }, 1400);
+      }
+      function fallback(){
+        try{
+          var ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+          document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); flash();
+        }catch(e){}
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(flash, function(){ fallback(); });
+      } else { fallback(); }
+    }
+
     document.getElementById('diagClose').addEventListener('click', closeDiag);
     document.getElementById('diagRefresh').addEventListener('click', collect);
+    document.getElementById('diagCopy').addEventListener('click', copyReport);
     diag.addEventListener('click', function(e){ if(e.target===diag) closeDiag(); });
   }catch(e){}
 })();
