@@ -742,6 +742,24 @@
     padding:22px 0;
   }
   .gb-waiting b{font-weight:500;opacity:.85}
+  .gb-sk{
+    display:flex;flex-direction:column;gap:9px;
+    margin:6px auto 18px;
+    max-width:420px;
+  }
+  .gb-sk i{
+    display:block;height:38px;
+    border-radius:11px;
+    background:linear-gradient(100deg, rgba(255,255,255,.035) 30%, rgba(255,255,255,.075) 50%, rgba(255,255,255,.035) 70%);
+    background-size:220% 100%;
+    animation:gbSk 1.5s linear infinite;
+  }
+  .gb-sk i:nth-child(2){height:52px}
+  .gb-sk i:nth-child(3){height:44px;max-width:78%}
+  @keyframes gbSk{to{background-position:-220% 0}}
+  .gb-sk-text{
+    font-size:11px;opacity:.32;margin-top:14px;letter-spacing:.02em;
+  }
   .gb-waiting code{
     font-family:var(--mono);
     font-size:10.5px;
@@ -869,7 +887,8 @@
       </button>
       <div class="gbx" id="giscus">
         <div class="gb-waiting" id="gbWaiting">
-          留言需要 GitHub 账号登录，登录后即可在这里留言。
+          <div class="gb-sk"><i></i><i></i><i></i></div>
+          <div class="gb-sk-text">留言需要 GitHub 账号登录，登录后即可在这里留言。</div>
         </div>
       </div>
     </section>
@@ -1650,9 +1669,6 @@
     if (giscusLoaded) return;
     giscusLoaded = true;
 
-    const wait = document.getElementById('gbWaiting');
-    if (wait) wait.remove();
-
     const box = document.getElementById('giscus');
     const s = document.createElement('script');
     s.src = 'https://giscus.app/client.js';
@@ -1671,13 +1687,27 @@
     s.crossOrigin = 'anonymous';
     s.async = true;
     box.appendChild(s);
+
+    const killSkeleton = () => {
+      const w = document.getElementById('gbWaiting');
+      if (w) w.remove();
+    };
+    s.addEventListener('load', () => {
+      const ifr = box.querySelector('iframe');
+      if (ifr) ifr.addEventListener('load', killSkeleton);
+      else setTimeout(killSkeleton, 2000);
+    });
+    setTimeout(killSkeleton, 20000);
   }
 
   gbToggle.addEventListener('click', () => {
     const open = gb.classList.toggle('open');
     gbToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     updateGbNote();
-    if (open) ensureGiscus();
+    if (open){
+      ensureGiscus();
+      setTimeout(() => gb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 280);
+    }
   });
 
   document.querySelectorAll('button.ic').forEach(btn => {
