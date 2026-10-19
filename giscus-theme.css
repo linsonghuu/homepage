@@ -122,6 +122,9 @@ main .gsc-comment-box-tabs > .mx-2 > button.color-bg-canvas{
   opacity: 1;
   box-shadow: inset 0 -2px 0 rgba(255,255,255,.85) !important;
 }
+main .gsc-comment-box-tabs > .mx-2 > button:nth-of-type(2){
+  display: none !important;
+}
 main .gsc-comment-box-tabs .gsc-toolbar-item{
   border-radius: 8px;
   margin-right: 6px;
