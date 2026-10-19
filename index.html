@@ -2131,7 +2131,7 @@
 <div class="diag" id="diag" role="dialog" aria-label="访客信息" aria-hidden="true">
   <div class="panel">
     <h3>访客信息 · Visitor Info <span class="x" id="diagClose" title="关闭">×</span></h3>
-    <p class="note">以下为浏览器在不请求任何权限（无定位 / 摄像头 / 通讯录等弹窗）的前提下，可直接读取的信息。仅你本人输入口令可见，访客无感。</p>
+    <p class="note">以下为浏览器在不请求任何权限（无定位 / 摄像头 / 通讯录等弹窗）的前提下，可直接读取的信息。仅你本人输入口令可见，访客无感。本站会汇总所有访客的匿名设备指纹与大致地理位置用于统计（经 Cloudflare Worker，不申请任何权限），数据仅站长可见。</p>
     <div class="fid"><span class="fl">访客指纹 ID</span><span class="fv" id="fpId">—</span></div>
     <div class="grp"><div class="gt">身份 / Identity</div><div id="gIdentity"></div></div>
     <div class="grp"><div class="gt">硬件 / Hardware</div><div id="gHardware"></div></div>
@@ -2192,8 +2192,8 @@
     }
 
     // ===== 全访客统计后端（需自行部署 Cloudflare Worker，见 worker.js）=====
-    var WORKER = '';        // ← 部署 Worker 后填地址，如 'https://linsonghuu-visitors.xxx.workers.dev'
-    var READ_SECRET = '';   // ← 与 Worker 环境变量 READ_SECRET 一致（仅你本人知道，藏在隐藏面板里）
+    var WORKER = 'https://linsonghuu-visitors.linsonghuu.workers.dev';   // 访客统计后端（Cloudflare Worker）
+    var READ_SECRET = 'YQ03A-gdiDtPPZeQ4xVrCF0DrXz29aVX';   // 与 Worker 环境变量一致，用于站长拉取全量访客
 
     function computeFp(){
       var ua = navigator.userAgent;
