@@ -72,6 +72,21 @@
   }
   #weather-fx.show{opacity:1}
 
+  .grain{
+    position:fixed;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    background-image:url(grain.png);
+    background-repeat:repeat;
+    background-size:160px 160px;
+    opacity:.055;
+    mix-blend-mode:screen;
+  }
+  @media (prefers-reduced-motion: reduce){
+    .grain{display:none}
+  }
+
   .plist{
     position:fixed;
     left:50%;
@@ -240,6 +255,19 @@
     border-radius:inherit;
     pointer-events:none;
     background:radial-gradient(120% 60% at 22% 0%, rgba(255,255,255,.055), transparent 62%);
+  }
+  @media (hover:hover){
+    .cell::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      background:radial-gradient(300px circle at var(--mx,-200px) var(--my,-200px), rgba(255,255,255,.075), transparent 60%);
+      opacity:0;
+      transition:opacity .4s ease;
+    }
+    .cell:hover::after{opacity:1}
   }
   .cell:hover{border-color:#2e2e2e}
 
@@ -415,6 +443,13 @@
     letter-spacing:.025em;
     max-width:34ch;
     text-wrap:balance;
+  }
+  .about p.about-quiet{
+    font-size:11.5px;
+    font-weight:400;
+    color:#9a9a9a;
+    line-height:1.8;
+    margin-top:-2px;
   }
   .sign{
     font-family:var(--mono);
@@ -673,18 +708,24 @@
   .pside:active{transform:scale(.92)}
   .pside svg{width:13px;height:13px;fill:currentColor;stroke:none}
 
-  .eq{display:inline-flex;align-items:flex-end;gap:2px;height:11px;opacity:0;transition:opacity .25s}
-  .playerbar.playing .eq{opacity:.7}
+  .eq{display:inline-flex;align-items:flex-end;gap:1.6px;height:13px;margin-left:1px;opacity:0;transition:opacity .25s}
+  .playerbar.playing .eq{opacity:.72}
   .eq i{
     width:2px;height:3px;border-radius:1px;background:currentColor;
+    transform-origin:bottom;
+    transition:height .07s linear;
+  }
+  .eq.live i{transition:height .06s linear}
+  .eq.flat{opacity:0 !important}
+  @keyframes eq{0%,100%{height:3px}50%{height:11px}}
+  .eq:not(.live) i{
     animation:eq 1s ease-in-out infinite;
     animation-play-state:paused;
   }
-  .playerbar.playing .eq i{animation-play-state:running}
-  .playerbar.playing .eq i:nth-child(1){animation-delay:-.15s}
-  .eq i:nth-child(2){animation-delay:-.45s}
-  .eq i:nth-child(3){animation-delay:-.75s}
-  @keyframes eq{0%,100%{height:3px}50%{height:11px}}
+  .playerbar.playing .eq:not(.live) i{animation-play-state:running}
+  .eq:not(.live) i:nth-child(1){animation-delay:-.15s}
+  .eq:not(.live) i:nth-child(2){animation-delay:-.45s}
+  .eq:not(.live) i:nth-child(3){animation-delay:-.75s}
 
   .hint{
     position:fixed;
@@ -910,6 +951,7 @@
 <body>
 
   <canvas id="weather-fx"></canvas>
+  <div class="grain" aria-hidden="true"></div>
 
   <div class="gate" id="gate" role="button" tabindex="0" aria-label="点击进入">
     <div class="gate-inner">
@@ -942,6 +984,7 @@
           About Me
         </div>
         <p>喜欢雌小鬼</p>
+        <p class="about-quiet">不过是些许风霜罢了</p>
         <div class="sign">— linsong</div>
       </div>
 
@@ -1039,7 +1082,7 @@
     <div class="meta">
       <div class="row1">
         <span class="t" id="ptitle">You</span>
-        <span class="eq"><i></i><i></i><i></i></span>
+        <span class="eq" id="eq" aria-hidden="true"></span>
       </div>
       <div class="a" id="partist">Lane 8 · Kasablanca</div>
       <div class="prow">
@@ -1350,6 +1393,7 @@
     gate.classList.add('gone');
     setTimeout(() => { gate.style.display = 'none'; }, 800);
     pickInitial();
+    kickAudio();
 
     if (window.requestIdleCallback) requestIdleCallback(() => { try { ensureGiscus(); } catch(err){} }, { timeout: 6000 });
     else setTimeout(() => { try { ensureGiscus(); } catch(err){} }, 4500);
@@ -1882,6 +1926,73 @@
       }, 1200);
     });
   });
+
+  const eqEl = document.getElementById('eq');
+  const EQ_BARS = 11;
+  const eqBars = [];
+  for (let i = 0; i < EQ_BARS; i++){
+    eqBars.push(eqEl.appendChild(document.createElement('i')));
+  }
+
+  let actx = null, analyser = null, freqData = null, eqRAF = null, eqBuilt = false, eqFlat = 0;
+
+  function buildAnalyser(){
+    if (eqBuilt) return analyser;
+    eqBuilt = true;
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      actx = new AC();
+      const src = actx.createMediaElementSource(audio);
+      analyser = actx.createAnalyser();
+      analyser.fftSize = 128;
+      analyser.smoothingTimeConstant = 0.72;
+      src.connect(analyser);
+      analyser.connect(actx.destination);
+      freqData = new Uint8Array(analyser.frequencyBinCount);
+      eqEl.classList.add('live');
+    }catch(err){
+      analyser = null;
+    }
+    return analyser;
+  }
+
+  function eqFrame(){
+    eqRAF = requestAnimationFrame(eqFrame);
+    if (!analyser || audio.paused){
+      for (const b of eqBars) b.style.height = '';
+      eqEl.classList.remove('flat');
+      return;
+    }
+    analyser.getByteFrequencyData(freqData);
+    const n = eqBars.length;
+    let sum = 0;
+    for (let i = 0; i < n; i++){
+      const idx = Math.floor(i / n * freqData.length * 0.55);
+      const v = freqData[idx] / 255;
+      sum += v;
+      eqBars[i].style.height = (3 + v * v * 10).toFixed(1) + 'px';
+    }
+    if (sum / n < 0.035) eqFlat++; else eqFlat = 0;
+    eqEl.classList.toggle('flat', eqFlat > 40);
+  }
+
+  function kickAudio(){
+    if (!analyser && !buildAnalyser()) return;
+    if (actx && actx.state === 'suspended') actx.resume();
+    if (!eqRAF) eqFrame();
+  }
+  document.addEventListener('pointerdown', kickAudio, { once: true });
+
+  if (window.matchMedia('(hover: hover)').matches){
+    document.querySelectorAll('.cell').forEach(card => {
+      card.addEventListener('pointermove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
+  }
 
   const QUIPS = [
     '喵呜——骗你的啦，笨蛋',
