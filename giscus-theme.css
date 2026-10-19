@@ -1,0 +1,72 @@
+@import url("https://giscus.app/themes/dark.css");
+
+main{
+  --color-canvas-default: transparent;
+  --color-canvas-overlay: rgba(14,14,14,.66);
+  --color-canvas-inset: rgba(255,255,255,.035);
+  --color-canvas-subtle: rgba(255,255,255,.03);
+  --color-border-default: rgba(255,255,255,.10);
+  --color-border-muted: rgba(255,255,255,.07);
+  --color-neutral-muted: rgba(255,255,255,.05);
+
+  --color-fg-default: #ededed;
+  --color-fg-muted: #9a9a9a;
+  --color-fg-subtle: #7a7a7a;
+
+  --color-accent-fg: #ffffff;
+  --color-accent-emphasis: rgba(255,255,255,.16);
+  --color-accent-muted: rgba(255,255,255,.12);
+  --color-accent-subtle: rgba(255,255,255,.07);
+
+  --color-success-fg: #e6edf3;
+  --color-attention-fg: #d8b06a;
+  --color-danger-fg: #f08780;
+
+  --color-btn-text: #ededed;
+  --color-btn-bg: rgba(255,255,255,.06);
+  --color-btn-border: rgba(255,255,255,.12);
+  --color-btn-shadow: none;
+  --color-btn-inset-shadow: none;
+  --color-btn-hover-bg: rgba(255,255,255,.11);
+  --color-btn-hover-border: rgba(255,255,255,.18);
+  --color-btn-active-bg: rgba(255,255,255,.09);
+  --color-btn-active-border: rgba(255,255,255,.14);
+  --color-btn-selected-bg: rgba(255,255,255,.12);
+
+  --color-btn-primary-text: #000000;
+  --color-btn-primary-bg: #f5f5f5;
+  --color-btn-primary-border: transparent;
+  --color-btn-primary-shadow: none;
+  --color-btn-primary-inset-shadow: none;
+  --color-btn-primary-hover-bg: #ffffff;
+  --color-btn-primary-hover-border: transparent;
+  --color-btn-primary-selected-bg: #ffffff;
+  --color-btn-primary-disabled-text: rgba(0,0,0,.45);
+  --color-btn-primary-disabled-bg: rgba(245,245,245,.5);
+
+  --color-action-list-item-default-hover-bg: rgba(255,255,255,.07);
+  --color-social-reaction-bg-hover: rgba(255,255,255,.07);
+  --color-social-reaction-bg-reacted-hover: rgba(255,255,255,.12);
+  --color-segmented-control-bg: rgba(255,255,255,.05);
+  --color-segmented-control-button-bg: rgba(10,10,10,.8);
+  --color-segmented-control-button-selected-border: rgba(255,255,255,.2);
+  --color-primer-shadow-inset: none;
+}
+
+main .gsc-loading-image{
+  background-image: url(https://raw.githubusercontent.com/giscus/giscus/main/client/loading.svg);
+}
+
+main textarea,
+main input{
+  border-radius: 12px !important;
+}
+
+main .gsc-comment-box{
+  border-radius: 14px;
+}
+
+main .Color,
+main .btn-primary{
+  border-radius: 9px;
+}
