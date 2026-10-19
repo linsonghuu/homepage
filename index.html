@@ -708,24 +708,10 @@
   .pside:active{transform:scale(.92)}
   .pside svg{width:13px;height:13px;fill:currentColor;stroke:none}
 
-  .eq{display:inline-flex;align-items:flex-end;gap:1.6px;height:13px;margin-left:1px;opacity:0;transition:opacity .25s}
-  .playerbar.playing .eq{opacity:.72}
-  .eq i{
-    width:2px;height:3px;border-radius:1px;background:currentColor;
-    transform-origin:bottom;
-    transition:height .07s linear;
-  }
-  .eq.live i{transition:height .06s linear}
+  .eq{display:block;width:96px;height:20px;margin-left:2px;opacity:0;transition:opacity .3s;flex:none}
+  .playerbar.playing .eq{opacity:.9}
   .eq.flat{opacity:0 !important}
-  @keyframes eq{0%,100%{height:3px}50%{height:11px}}
-  .eq:not(.live) i{
-    animation:eq 1s ease-in-out infinite;
-    animation-play-state:paused;
-  }
-  .playerbar.playing .eq:not(.live) i{animation-play-state:running}
-  .eq:not(.live) i:nth-child(1){animation-delay:-.15s}
-  .eq:not(.live) i:nth-child(2){animation-delay:-.45s}
-  .eq:not(.live) i:nth-child(3){animation-delay:-.75s}
+  @media (max-width:560px){.eq{width:66px}}
 
   .hint{
     position:fixed;
@@ -1082,7 +1068,7 @@
     <div class="meta">
       <div class="row1">
         <span class="t" id="ptitle">You</span>
-        <span class="eq" id="eq" aria-hidden="true"></span>
+        <canvas class="eq" id="eq" aria-hidden="true"></canvas>
       </div>
       <div class="a" id="partist">Lane 8 · Kasablanca</div>
       <div class="prow">
@@ -1928,13 +1914,23 @@
   });
 
   const eqEl = document.getElementById('eq');
-  const EQ_BARS = 11;
-  const eqBars = [];
-  for (let i = 0; i < EQ_BARS; i++){
-    eqBars.push(eqEl.appendChild(document.createElement('i')));
-  }
-
+  const EQ_BARS = 28;
+  const eqCtx = eqEl.getContext('2d');
+  let eqW = 96, eqH = 20, eqDPR = 1;
+  const eqSmooth = new Float32Array(EQ_BARS);
+  const eqPeak = new Float32Array(EQ_BARS);
   let actx = null, analyser = null, freqData = null, eqRAF = null, eqBuilt = false, eqFlat = 0;
+
+  function eqSize(){
+    eqDPR = Math.min(window.devicePixelRatio || 1, 2);
+    eqW = eqEl.clientWidth || 96;
+    eqH = eqEl.clientHeight || 20;
+    eqEl.width = Math.round(eqW * eqDPR);
+    eqEl.height = Math.round(eqH * eqDPR);
+    eqCtx.setTransform(eqDPR, 0, 0, eqDPR, 0, 0);
+  }
+  eqSize();
+  window.addEventListener('resize', eqSize);
 
   function buildAnalyser(){
     if (eqBuilt) return analyser;
@@ -1945,8 +1941,8 @@
       actx = new AC();
       const src = actx.createMediaElementSource(audio);
       analyser = actx.createAnalyser();
-      analyser.fftSize = 128;
-      analyser.smoothingTimeConstant = 0.72;
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
       src.connect(analyser);
       analyser.connect(actx.destination);
       freqData = new Uint8Array(analyser.frequencyBinCount);
@@ -1957,28 +1953,71 @@
     return analyser;
   }
 
-  function eqFrame(){
+  function eqGeom(){
+    const gap = 1.4;
+    const bw = (eqW - gap * (EQ_BARS - 1)) / EQ_BARS;
+    return { gap, bw, r: Math.min(bw / 2, 5) };
+  }
+
+  function eqDraw(now, live){
+    eqCtx.clearRect(0, 0, eqW, eqH);
+    const { gap, bw, r } = eqGeom();
+    const grad = eqCtx.createLinearGradient(0, 0, 0, eqH);
+    grad.addColorStop(0, 'rgba(245,245,245,0.96)');
+    grad.addColorStop(1, 'rgba(245,245,245,0.18)');
+    eqCtx.shadowColor = 'rgba(245,245,245,0.30)';
+    eqCtx.shadowBlur = 5;
+    const t = (now || 0) / 650;
+    for (let i = 0; i < EQ_BARS; i++){
+      const v = live ? eqSmooth[i] : 0.16 + 0.12 * Math.abs(Math.sin(t + i * 0.55));
+      const h = Math.max(1.6, v * (eqH - 4));
+      const x = i * (bw + gap);
+      const y = eqH - h;
+      eqCtx.fillStyle = grad;
+      eqCtx.beginPath();
+      eqCtx.roundRect(x, y, bw, h, [r, r, 0, 0]);
+      eqCtx.fill();
+      if (live){
+        const ph = Math.max(1.6, eqPeak[i] * (eqH - 4));
+        eqCtx.shadowBlur = 7;
+        eqCtx.fillStyle = 'rgba(255,255,255,0.92)';
+        eqCtx.beginPath();
+        eqCtx.roundRect(x, eqH - ph - 2.4, bw, 2.4, 1.2);
+        eqCtx.fill();
+      }
+    }
+    eqCtx.shadowBlur = 0;
+  }
+
+  function eqFrame(now){
     eqRAF = requestAnimationFrame(eqFrame);
     if (!analyser || audio.paused){
-      for (const b of eqBars) b.style.height = '';
+      eqDraw(now, false);
       eqEl.classList.remove('flat');
       return;
     }
     analyser.getByteFrequencyData(freqData);
-    const n = eqBars.length;
+    const bins = freqData.length;
+    const minBin = 2, maxBin = Math.floor(bins * 0.82);
     let sum = 0;
-    for (let i = 0; i < n; i++){
-      const idx = Math.floor(i / n * freqData.length * 0.55);
-      const v = freqData[idx] / 255;
+    for (let i = 0; i < EQ_BARS; i++){
+      const tt = i / (EQ_BARS - 1);
+      const bin = Math.min(bins - 1, Math.round(minBin * Math.pow(maxBin / minBin, tt)));
+      let v = freqData[bin] / 255;
+      v = Math.pow(v, 0.85);
       sum += v;
-      eqBars[i].style.height = (3 + v * v * 10).toFixed(1) + 'px';
+      if (v > eqSmooth[i]) eqSmooth[i] = v;
+      else eqSmooth[i] += (v - eqSmooth[i]) * 0.16;
+      if (v > eqPeak[i]) eqPeak[i] = v;
+      else eqPeak[i] = Math.max(v, eqPeak[i] - 0.011);
     }
-    if (sum / n < 0.035) eqFlat++; else eqFlat = 0;
+    eqDraw(now, true);
+    if (sum / EQ_BARS < 0.04) eqFlat++; else eqFlat = 0;
     eqEl.classList.toggle('flat', eqFlat > 40);
   }
 
   function kickAudio(){
-    if (!analyser && !buildAnalyser()) return;
+    if (!analyser) buildAnalyser();
     if (actx && actx.state === 'suspended') actx.resume();
     if (!eqRAF) eqFrame();
   }
