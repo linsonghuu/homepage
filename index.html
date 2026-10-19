@@ -1566,9 +1566,13 @@
     if (ev.origin !== 'https://giscus.app') return;
     const d = ev.data && ev.data.giscus;
     if (!d) return;
-    const disc = d.discussion;
-    if (disc && typeof disc.totalCommentCount === 'number'){
-      gbCount = disc.totalCommentCount;
+    if (d.discussion && typeof d.discussion.totalCommentCount === 'number'){
+      gbCount = d.discussion.totalCommentCount;
+      updateGbNote();
+      return;
+    }
+    if (d.error === 'Discussion not found'){
+      gbCount = 0;
       updateGbNote();
     }
   });
