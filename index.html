@@ -72,6 +72,43 @@
   }
   #weather-fx.show{opacity:1}
 
+  .plist{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%) translateY(10px);
+    bottom:120px;
+    z-index:51;
+    width:min(580px,calc(100vw - 28px));
+    max-height:min(46vh,340px);
+    overflow-y:auto;
+    padding:7px;
+    border-radius:20px;
+    background:rgba(12,12,12,.86);
+    border:1px solid rgba(255,255,255,.10);
+    backdrop-filter:blur(30px) saturate(160%);
+    -webkit-backdrop-filter:blur(30px) saturate(160%);
+    box-shadow:0 24px 60px -20px rgba(0,0,0,.95);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .22s ease, transform .22s ease;
+  }
+  .plist.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
+  .plist button{
+    width:100%;
+    display:flex;align-items:center;gap:11px;
+    padding:10px 12px;
+    border:0;border-radius:13px;
+    background:transparent;color:var(--ink);
+    font:inherit;font-size:12.5px;text-align:left;cursor:pointer;
+    transition:background .16s ease;
+  }
+  .plist button:hover{background:rgba(255,255,255,.07)}
+  .plist button.on{background:rgba(255,255,255,.11)}
+  .plist .idx{font-family:var(--mono);font-size:9.5px;opacity:.38;width:13px;flex:none}
+  .plist button.on .idx{opacity:.9}
+  .plist .tt{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+  .plist .du{font-family:var(--mono);font-size:9.5px;opacity:.38;flex:none}
+
   .fxbar{
     position:fixed;
     left:clamp(12px,2vw,24px);
@@ -840,6 +877,8 @@
     <button data-w="fog" aria-label="雾"><svg viewBox="0 0 24 24"><path d="M4 9h16M6 13h12M4 17h16"/></svg></button>
   </div>
 
+  <div class="plist" id="plist" role="listbox" aria-label="播放列表"></div>
+
   <section class="playerbar" id="playerbar">
 
     <div class="art"><img id="artImg" src="cover.jpg" alt="专辑封面"></div>
@@ -871,7 +910,7 @@
       </button>
     </div>
 
-    <input class="vol" id="vol" type="range" min="0" max="100" value="25" aria-label="音量">
+    <input class="vol" id="vol" type="range" min="0" max="100" value="18" aria-label="音量">
 
     <audio id="audio" preload="none"></audio>
   </section>
@@ -888,6 +927,7 @@
       <li><kbd>←</kbd><kbd>→</kbd><span>上一首 / 下一首</span></li>
       <li><kbd>↑</kbd><kbd>↓</kbd><span>音量</span></li>
       <li><kbd>M</kbd><span>静音</span></li>
+      <li><kbd>L</kbd><span>播放列表</span></li>
       <li><kbd>?</kbd><span>打开 / 关闭本面板</span></li>
     </ul>
   </div>
@@ -912,7 +952,7 @@
   const ptime     = document.getElementById('ptime');
   const ptrack    = document.getElementById('ptrack');
 
-  audio.volume = 0.25;
+  audio.volume = 0.175;
 
   const fmt = s => {
     if (!isFinite(s) || s < 0) return '0:00';
@@ -956,7 +996,8 @@
       case 'ArrowDown':    e.preventDefault(); setVolume(audio.volume - .05); break;
       case 'm': case 'M':  audio.muted = !audio.muted; break;
       case '?':            keysPanel.classList.toggle('show'); break;
-      case 'Escape':       keysPanel.classList.remove('show'); break;
+      case 'Escape':       keysPanel.classList.remove('show'); document.getElementById('plist').classList.remove('show'); break;
+      case 'l': case 'L':  toggleList(); break;
     }
   });
 
@@ -978,6 +1019,44 @@
   const pNext    = document.getElementById('pnext');
   const pPrev    = document.getElementById('pprev');
   const preloaded = {};
+
+  const plist = document.getElementById('plist');
+
+  function renderPlaylist(){
+    plist.innerHTML = '';
+    PLAYLIST.forEach((t, i) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      if (i === cur) b.className = 'on';
+      const idx = document.createElement('span');
+      idx.className = 'idx';
+      idx.textContent = i === cur ? '♪' : String(i + 1);
+      const tt = document.createElement('span');
+      tt.className = 'tt';
+      tt.textContent = t.title;
+      const du = document.createElement('span');
+      du.className = 'du';
+      du.textContent = fmt(t.dur);
+      b.append(idx, tt, du);
+      b.addEventListener('click', ev => {
+        ev.stopPropagation();
+        loadTrack(i, true);
+        toggleList(false);
+      });
+      plist.appendChild(b);
+    });
+  }
+
+  function positionList(){
+    const r = playerbar.getBoundingClientRect();
+    plist.style.bottom = Math.round(window.innerHeight - r.top + 10) + 'px';
+  }
+
+  function toggleList(force){
+    const open = typeof force === 'boolean' ? force : !plist.classList.contains('show');
+    if (open){ renderPlaylist(); positionList(); }
+    plist.classList.toggle('show', open);
+  }
 
   let cur = Math.floor(Math.random() * PLAYLIST.length);
   let initialPicked = false;
@@ -1004,6 +1083,7 @@
     pfill.style.width = '0%';
     ptime.textContent = '0:00 / ' + fmt(t.dur);
     if (autoplay) audio.play().catch(() => {});
+    if (plist.classList.contains('show')) renderPlaylist();
   }
 
   function preloadRest(){
@@ -1025,6 +1105,19 @@
     loadTrack(cur - 1, true);
   });
 
+  const artBox = document.querySelector('.art');
+  artBox.addEventListener('click', e => {
+    e.stopPropagation();
+    toggleList();
+  });
+  pTitle.addEventListener('click', e => {
+    e.stopPropagation();
+    toggleList();
+  });
+  window.addEventListener('resize', () => {
+    if (plist.classList.contains('show')) positionList();
+  });
+
   audio.addEventListener('ended', () => loadTrack(cur + 1, true));
 
   const gate = document.getElementById('gate');
@@ -1038,6 +1131,7 @@
     gate.classList.add('gone');
     setTimeout(() => { gate.style.display = 'none'; }, 800);
     pickInitial();
+    setTimeout(() => { try { ensureGiscus(); } catch(err){} }, 4000);
 
     audio.play().catch(() => {
       playerbar.classList.add('blocked');
@@ -1452,6 +1546,29 @@
   const gbToggle = document.getElementById('gbToggle');
   const gbNoteText = document.getElementById('gbNoteText');
   let giscusLoaded = false;
+  let gbCount = null;
+
+  function updateGbNote(){
+    if (gb.classList.contains('open')){
+      gbNoteText.textContent = '收起';
+      return;
+    }
+    if (gbCount === null){
+      gbNoteText.textContent = '留言';
+    } else if (gbCount === 0){
+      gbNoteText.textContent = '暂无留言';
+    } else {
+      gbNoteText.textContent = gbCount + ' 条留言';
+    }
+  }
+
+  window.addEventListener('message', ev => {
+    if (ev.origin !== 'https://giscus.app') return;
+    const d = ev.data && ev.data.giscus;
+    if (!d || typeof d.totalCommentCount !== 'number') return;
+    gbCount = d.totalCommentCount;
+    updateGbNote();
+  });
 
   function ensureGiscus(){
     if (giscusLoaded) return;
@@ -1470,11 +1587,11 @@
     s.setAttribute('data-mapping', GISCUS.mapping);
     s.setAttribute('data-strict', '0');
     s.setAttribute('data-reactions-enabled', '1');
-    s.setAttribute('data-emit-metadata', '0');
+    s.setAttribute('data-emit-metadata', '1');
     s.setAttribute('data-input-position', GISCUS.inputPosition);
     s.setAttribute('data-theme', GISCUS.theme);
     s.setAttribute('data-lang', 'zh-CN');
-    s.setAttribute('data-loading', 'lazy');
+    s.setAttribute('data-loading', 'eager');
     s.crossOrigin = 'anonymous';
     s.async = true;
     box.appendChild(s);
@@ -1483,7 +1600,7 @@
   gbToggle.addEventListener('click', () => {
     const open = gb.classList.toggle('open');
     gbToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-    gbNoteText.textContent = open ? '收起' : '留言';
+    updateGbNote();
     if (open) ensureGiscus();
   });
 
