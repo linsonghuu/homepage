@@ -158,6 +158,9 @@ main .gsc-comment-box-textarea:focus{
 main .gsc-comment-box-markdown-hint{
   display: none !important;
 }
+main .gsc-comment-box-write > div.form-control{
+  display: none !important;
+}
 
 main .gsc-comment-box-bottom{
   border: 0 !important;
