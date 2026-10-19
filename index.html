@@ -1519,7 +1519,9 @@
   const COUNT_KEY = 'visitors';
   const SEEN_KEY  = 'linsong-home-seen';
   const viewsEl   = document.getElementById('views');
-  const showViews = n => { viewsEl.textContent = n.toLocaleString('en-US') + ' views'; };
+  const showViews = n => {
+    viewsEl.textContent = n.toLocaleString('en-US') + (n === 1 ? ' view' : ' views');
+  };
 
   function cookieGet(k){
     const m = document.cookie.match('(^|;)\\s*' + k + '\\s*=\\s*([^;]*)');
