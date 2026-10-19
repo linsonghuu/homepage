@@ -708,10 +708,10 @@
   .pside:active{transform:scale(.92)}
   .pside svg{width:13px;height:13px;fill:currentColor;stroke:none}
 
-  .eq{display:block;width:96px;height:20px;margin-left:2px;opacity:0;transition:opacity .3s;flex:none}
-  .playerbar.playing .eq{opacity:.9}
+  .eq{display:block;width:96px;height:22px;margin-left:2px;opacity:0;transition:opacity .3s;flex:none}
+  .playerbar.playing .eq{opacity:.92}
   .eq.flat{opacity:0 !important}
-  @media (max-width:560px){.eq{width:66px}}
+  @media (max-width:560px){.eq{width:66px;height:18px}}
 
   .hint{
     position:fixed;
@@ -1914,12 +1914,9 @@
   });
 
   const eqEl = document.getElementById('eq');
-  const EQ_BARS = 28;
   const eqCtx = eqEl.getContext('2d');
-  let eqW = 96, eqH = 20, eqDPR = 1;
-  const eqSmooth = new Float32Array(EQ_BARS);
-  const eqPeak = new Float32Array(EQ_BARS);
-  let actx = null, analyser = null, freqData = null, eqRAF = null, eqBuilt = false, eqFlat = 0;
+  let eqW = 96, eqH = 22, eqDPR = 1;
+  let actx = null, analyser = null, timeData = null, eqRAF = null, eqBuilt = false, eqPhase = 0;
 
   function eqSize(){
     eqDPR = Math.min(window.devicePixelRatio || 1, 2);
@@ -1941,11 +1938,11 @@
       actx = new AC();
       const src = actx.createMediaElementSource(audio);
       analyser = actx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.8;
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0.6;
       src.connect(analyser);
       analyser.connect(actx.destination);
-      freqData = new Uint8Array(analyser.frequencyBinCount);
+      timeData = new Uint8Array(analyser.fftSize);
       eqEl.classList.add('live');
     }catch(err){
       analyser = null;
@@ -1953,67 +1950,49 @@
     return analyser;
   }
 
-  function eqGeom(){
-    const gap = 1.4;
-    const bw = (eqW - gap * (EQ_BARS - 1)) / EQ_BARS;
-    return { gap, bw, r: Math.min(bw / 2, 5) };
-  }
-
   function eqDraw(now, live){
     eqCtx.clearRect(0, 0, eqW, eqH);
-    const { gap, bw, r } = eqGeom();
+    const mid = eqH / 2;
+    const amp = mid - 1.6;
+    const GAIN = 2.8;
     const grad = eqCtx.createLinearGradient(0, 0, 0, eqH);
-    grad.addColorStop(0, 'rgba(245,245,245,0.96)');
-    grad.addColorStop(1, 'rgba(245,245,245,0.18)');
-    eqCtx.shadowColor = 'rgba(245,245,245,0.30)';
+    grad.addColorStop(0, 'rgba(245,245,245,0.95)');
+    grad.addColorStop(1, 'rgba(245,245,245,0.30)');
+    eqCtx.lineWidth = 1.6;
+    eqCtx.lineJoin = 'round';
+    eqCtx.lineCap = 'round';
+    eqCtx.strokeStyle = grad;
+    eqCtx.shadowColor = 'rgba(245,245,245,0.35)';
     eqCtx.shadowBlur = 5;
-    const t = (now || 0) / 650;
-    for (let i = 0; i < EQ_BARS; i++){
-      const v = live ? eqSmooth[i] : 0.16 + 0.12 * Math.abs(Math.sin(t + i * 0.55));
-      const h = Math.max(1.6, v * (eqH - 4));
-      const x = i * (bw + gap);
-      const y = eqH - h;
-      eqCtx.fillStyle = grad;
-      eqCtx.beginPath();
-      eqCtx.roundRect(x, y, bw, h, [r, r, 0, 0]);
-      eqCtx.fill();
-      if (live){
-        const ph = Math.max(1.6, eqPeak[i] * (eqH - 4));
-        eqCtx.shadowBlur = 7;
-        eqCtx.fillStyle = 'rgba(255,255,255,0.92)';
-        eqCtx.beginPath();
-        eqCtx.roundRect(x, eqH - ph - 2.4, bw, 2.4, 1.2);
-        eqCtx.fill();
+    eqCtx.beginPath();
+    if (live && timeData){
+      analyser.getByteTimeDomainData(timeData);
+      const n = timeData.length;
+      const P = Math.max(64, Math.floor(eqW * 1.5));
+      for (let p = 0; p <= P; p++){
+        const xi = Math.floor(p / P * (n - 1));
+        const v = (timeData[xi] - 128) / 128;
+        let y = mid + v * amp * GAIN;
+        if (y < 1) y = 1; else if (y > eqH - 1) y = eqH - 1;
+        const x = p / P * eqW;
+        if (p === 0) eqCtx.moveTo(x, y); else eqCtx.lineTo(x, y);
+      }
+    } else {
+      eqPhase += 0.06;
+      for (let x = 0; x <= eqW; x += 1){
+        const v = 0.16 * Math.sin(x * 0.16 + eqPhase) * Math.sin(eqPhase * 0.6 + x * 0.05);
+        let y = mid + v * amp * GAIN;
+        if (y < 1) y = 1; else if (y > eqH - 1) y = eqH - 1;
+        if (x === 0) eqCtx.moveTo(x, y); else eqCtx.lineTo(x, y);
       }
     }
+    eqCtx.stroke();
     eqCtx.shadowBlur = 0;
   }
 
   function eqFrame(now){
     eqRAF = requestAnimationFrame(eqFrame);
-    if (!analyser || audio.paused){
-      eqDraw(now, false);
-      eqEl.classList.remove('flat');
-      return;
-    }
-    analyser.getByteFrequencyData(freqData);
-    const bins = freqData.length;
-    const minBin = 2, maxBin = Math.floor(bins * 0.82);
-    let sum = 0;
-    for (let i = 0; i < EQ_BARS; i++){
-      const tt = i / (EQ_BARS - 1);
-      const bin = Math.min(bins - 1, Math.round(minBin * Math.pow(maxBin / minBin, tt)));
-      let v = freqData[bin] / 255;
-      v = Math.pow(v, 0.85);
-      sum += v;
-      if (v > eqSmooth[i]) eqSmooth[i] = v;
-      else eqSmooth[i] += (v - eqSmooth[i]) * 0.16;
-      if (v > eqPeak[i]) eqPeak[i] = v;
-      else eqPeak[i] = Math.max(v, eqPeak[i] - 0.011);
-    }
-    eqDraw(now, true);
-    if (sum / EQ_BARS < 0.04) eqFlat++; else eqFlat = 0;
-    eqEl.classList.toggle('flat', eqFlat > 40);
+    eqDraw(now, analyser && !audio.paused);
   }
 
   function kickAudio(){
