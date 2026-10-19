@@ -96,6 +96,9 @@ main .gsc-comment-box-tabs > .mx-2{
 main .gsc-comment-box-tabs button{
   border-radius: 10px 10px 0 0 !important;
 }
+main .gsc-comment-box-tabs > .mx-2 > button:last-child{
+  display: none !important;
+}
 main .gsc-comment-box-tabs .gsc-toolbar-item{
   border-radius: 8px;
   opacity: .5;
