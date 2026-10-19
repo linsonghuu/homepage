@@ -934,6 +934,21 @@
 
 
 
+  .diag{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .diag.show{display:flex}
+  .diag .panel{position:relative;max-width:560px;width:100%;max-height:84vh;overflow:auto;background:linear-gradient(158deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.025) 100%);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:20px 22px;box-shadow:0 24px 70px rgba(0,0,0,.7)}
+  .diag h3{font-size:14px;font-weight:600;letter-spacing:.01em;display:flex;align-items:center;justify-content:space-between;margin:0}
+  .diag h3 .x{cursor:pointer;opacity:.5;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px}
+  .diag h3 .x:hover{opacity:1;background:rgba(255,255,255,.08)}
+  .diag .note{font-size:10.5px;opacity:.4;margin:8px 0 2px;line-height:1.5}
+  .diag .grp{margin-top:14px}
+  .diag .gt{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.5;margin-bottom:6px}
+  .diag .row{display:flex;justify-content:space-between;gap:16px;font-size:12.5px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+  .diag .row b{font-weight:500;opacity:.55;flex:none}
+  .diag .row span{text-align:right;font-family:var(--mono);font-size:11.5px;word-break:break-all;opacity:.92}
+  .diag .re{margin-top:16px;font-size:11.5px;padding:8px 12px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;cursor:pointer;opacity:.8;text-align:center}
+  .diag .re:hover{opacity:1;background:rgba(255,255,255,.09)}
+
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important;animation:none!important}
     .cell.reveal{opacity:1!important;transform:none!important}
@@ -2092,6 +2107,153 @@
     }catch(e){}
   })();
 
+})();
+</script>
+
+<!-- 隐藏访客信息面板：在任意位置连续键入 "diag" 即可开关，不请求任何权限 -->
+<div class="diag" id="diag" role="dialog" aria-label="访客信息" aria-hidden="true">
+  <div class="panel">
+    <h3>访客信息 · Visitor Info <span class="x" id="diagClose" title="关闭">×</span></h3>
+    <p class="note">以下为浏览器在不请求任何权限（无定位 / 摄像头 / 通讯录等弹窗）的前提下，可直接读取的信息。仅你本人输入口令可见，访客无感。</p>
+    <div class="grp"><div class="gt">身份 / Identity</div><div id="gIdentity"></div></div>
+    <div class="grp"><div class="gt">硬件 / Hardware</div><div id="gHardware"></div></div>
+    <div class="grp"><div class="gt">屏幕 / Screen</div><div id="gScreen"></div></div>
+    <div class="grp"><div class="gt">网络 / Network</div><div id="gNetwork"></div></div>
+    <div class="grp"><div class="gt">指纹 / Fingerprint</div><div id="gFinger"></div></div>
+    <div class="re" id="diagRefresh">↻ 刷新</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  try{
+    var diag = document.getElementById('diag');
+    var KEY = 'diag';               // 隐藏口令：在页面任意位置连续键入字母 d-i-a-g
+    var buf = '';
+
+    function hash(s){ var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h+s.charCodeAt(i))>>>0; } return h.toString(16); }
+
+    function row(parent, label, val){
+      var r = document.createElement('div'); r.className='row';
+      var b = document.createElement('b'); b.textContent=label;
+      var s = document.createElement('span'); s.textContent=(val==null||val===''?'—':val);
+      r.appendChild(b); r.appendChild(s); parent.appendChild(r);
+    }
+
+    function canvasFP(){
+      try{
+        var c=document.createElement('canvas'); c.width=240; c.height=60;
+        var x=c.getContext('2d'); x.textBaseline='top'; x.font="14px 'Arial'";
+        x.fillStyle='#f60'; x.fillRect(10,10,80,30);
+        x.fillStyle='#069'; x.fillText('visitor-fp', 12, 14);
+        x.fillStyle='rgba(120,20,200,.6)'; x.fillText('visitor-fp', 14, 16);
+        return hash(c.toDataURL());
+      }catch(e){ return 'n/a'; }
+    }
+
+    function webglInfo(){
+      try{
+        var c=document.createElement('canvas');
+        var gl=c.getContext('webgl')||c.getContext('experimental-webgl');
+        if(!gl) return {renderer:'n/a',vendor:'n/a',hash:hash('none')};
+        var dbg=gl.getExtension('WEBGL_debug_renderer_info');
+        var r=dbg?gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER);
+        var v=dbg?gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL):gl.getParameter(gl.VENDOR);
+        return {renderer:r,vendor:v,hash:hash(r+'|'+v)};
+      }catch(e){ return {renderer:'n/a',vendor:'n/a',hash:'n/a'}; }
+    }
+
+    function collect(){
+      var gi=document.getElementById('gIdentity');
+      var gh=document.getElementById('gHardware');
+      var gs=document.getElementById('gScreen');
+      var gn=document.getElementById('gNetwork');
+      var gf=document.getElementById('gFinger');
+      [gi,gh,gs,gn,gf].forEach(function(g){ g.innerHTML=''; });
+
+      var ua = navigator.userAgent;
+      var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '—';
+      var lang = (navigator.languages && navigator.languages.join(', ')) || navigator.language || '—';
+      var tz = (function(){ try{ return Intl.DateTimeFormat().resolvedOptions().timeZone; }catch(e){ return '—'; } })();
+      var off = -new Date().getTimezoneOffset()/60;
+      row(gi,'User Agent', ua);
+      row(gi,'平台 / Platform', plat);
+      row(gi,'语言 / Languages', lang);
+      row(gi,'时区 / Timezone', tz + '  (UTC' + (off>=0?'+':'') + off + ')');
+      row(gi,'本地时间', new Date().toLocaleString());
+
+      var cores = navigator.hardwareConcurrency || '—';
+      var mem = navigator.deviceMemory ? navigator.deviceMemory + ' GB' : '—';
+      var touch = navigator.maxTouchPoints || 0;
+      var pointer = matchMedia('(pointer:fine)').matches ? '精确（鼠标）' : (matchMedia('(pointer:coarse)').matches ? '粗略（触摸）' : '—');
+      var dnt = navigator.doNotTrack==='1' || window.doNotTrack==='1' ? '开启' : '未开启 / 未知';
+      row(gh,'CPU 核心数', cores);
+      row(gh,'内存 / Device Memory', mem);
+      row(gh,'最大触摸点', touch);
+      row(gh,'指针类型', pointer);
+      row(gh,'Do Not Track', dnt);
+      row(gh,'Cookie 启用', navigator.cookieEnabled ? '是' : '否');
+
+      row(gs,'分辨率', screen.width + ' × ' + screen.height);
+      row(gs,'可用区域', screen.availWidth + ' × ' + screen.availHeight);
+      row(gs,'像素比 DPR', window.devicePixelRatio);
+      row(gs,'色彩深度', screen.colorDepth + ' bit');
+      row(gs,'窗口大小', window.innerWidth + ' × ' + window.innerHeight);
+
+      var conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      row(gn,'连接类型', conn ? (conn.effectiveType || conn.type || '—') : '—');
+      row(gn,'下行速度', conn && conn.downlink ? conn.downlink + ' Mbps' : '—');
+      row(gn,'RTT 延迟', conn && conn.rtt ? conn.rtt + ' ms' : '—');
+      row(gn,'省流量模式', conn && conn.saveData ? '开启' : '—');
+      row(gn,'IP 地址', '查询中…');
+      row(gn,'地理位置', '查询中…');
+      row(gn,'运营商 / ISP', '查询中…');
+
+      var w = webglInfo();
+      row(gf,'Canvas 指纹', canvasFP());
+      row(gf,'WebGL 指纹', w.hash);
+      row(gf,'GPU 渲染器', w.renderer);
+      row(gf,'GPU 厂商', w.vendor);
+
+      // 无权限、非定位的 IP 地理查询（仅读取网络层信息，不弹任何授权）
+      // 主用 ipwho.is，失败回退 ipinfo.io，二者均开启 CORS
+      var netRows = gn.querySelectorAll('.row');
+      function setNet(label, val){
+        netRows.forEach(function(r){
+          var b = r.querySelector('b');
+          if(b && b.textContent===label){ r.querySelector('span').textContent = (val||'—'); }
+        });
+      }
+      function fillGeo(d){
+        setNet('IP 地址', d.ip);
+        setNet('地理位置', [d.city, d.region, d.country].filter(Boolean).join(' · '));
+        setNet('运营商 / ISP', d.isp || d.org || '—');
+      }
+      var geoSources = [
+        function(){ return fetch('https://ipwho.is/').then(function(r){ return r.ok?r.json():Promise.reject(); }).then(function(d){ if(d.success===false) return Promise.reject(); return {ip:d.ip,city:d.city,region:d.region,country:d.country,isp:(d.connection&&(d.connection.org||d.connection.isp))||d.org}; }); },
+        function(){ return fetch('https://ipinfo.io/json').then(function(r){ return r.ok?r.json():Promise.reject(); }).then(function(d){ return {ip:d.ip,city:d.city,region:d.region,country:d.country,isp:d.org}; }); }
+      ];
+      (function next(i){
+        if(i>=geoSources.length) return;
+        geoSources[i]().then(fillGeo).catch(function(){ next(i+1); });
+      })(0);
+    }
+
+    function openDiag(){ collect(); diag.classList.add('show'); diag.setAttribute('aria-hidden','false'); }
+    function closeDiag(){ diag.classList.remove('show'); diag.setAttribute('aria-hidden','true'); }
+    function toggleDiag(){ diag.classList.contains('show') ? closeDiag() : openDiag(); }
+
+    document.addEventListener('keydown', function(e){
+      if(e.key && e.key.length===1){
+        buf=(buf+e.key.toLowerCase()).slice(-KEY.length);
+        if(buf===KEY) toggleDiag();
+      }
+      if(e.key==='Escape') closeDiag();
+    });
+    document.getElementById('diagClose').addEventListener('click', closeDiag);
+    document.getElementById('diagRefresh').addEventListener('click', collect);
+    diag.addEventListener('click', function(e){ if(e.target===diag) closeDiag(); });
+  }catch(e){}
 })();
 </script>
 </body>
