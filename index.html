@@ -1533,7 +1533,7 @@
   }
 
   const GISCUS = {
-    repo:       '2819397477/homepage',
+    repo:       'linsonghuu/homepage',
     repoId:     'R_kgDOVOaJJg',
     category:   'General',
     categoryId: 'DIC_kwDOVOaJJs4DI4RA',
@@ -1565,9 +1565,12 @@
   window.addEventListener('message', ev => {
     if (ev.origin !== 'https://giscus.app') return;
     const d = ev.data && ev.data.giscus;
-    if (!d || typeof d.totalCommentCount !== 'number') return;
-    gbCount = d.totalCommentCount;
-    updateGbNote();
+    if (!d) return;
+    const disc = d.discussion;
+    if (disc && typeof disc.totalCommentCount === 'number'){
+      gbCount = disc.totalCommentCount;
+      updateGbNote();
+    }
   });
 
   function ensureGiscus(){
