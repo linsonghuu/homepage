@@ -425,6 +425,29 @@
   }
 
   .date{font-size:11px;font-weight:500;opacity:.46;letter-spacing:.02em}
+  .tp-bar{
+    width:min(152px,78%);
+    height:3px;
+    margin-top:10px;
+    border-radius:99px;
+    background:rgba(255,255,255,.07);
+    overflow:hidden;
+  }
+  .tp-bar i{
+    display:block;height:100%;width:0;
+    border-radius:99px;
+    background:linear-gradient(90deg, rgba(255,255,255,.2), rgba(255,255,255,.66));
+    transition:width .6s ease;
+  }
+  .tp-note{
+    font-family:var(--mono);
+    font-size:9px;
+    letter-spacing:.05em;
+    opacity:.3;
+    margin-top:7px;
+    white-space:nowrap;
+    min-height:11px;
+  }
   .clock{
     font-family:var(--mono);
     font-size:clamp(22px,2.7vw,25px);
@@ -974,6 +997,8 @@
         </div>
         <div class="date" id="date">—</div>
         <div class="clock" id="clock">00:00:00</div>
+        <div class="tp-bar"><i id="tpDay"></i></div>
+        <div class="tp-note" id="tpNote">—</div>
       </div>
 
       <div class="cell links">
@@ -1089,11 +1114,20 @@
     const clockEl = document.getElementById('clock');
   const dateEl  = document.getElementById('date');
   const week = '日一二三四五六';
+  const tpDay  = document.getElementById('tpDay');
+  const tpNote = document.getElementById('tpNote');
   function tick(){
     const d = new Date();
     const p = n => String(n).padStart(2,'0');
     clockEl.textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
     dateEl.textContent = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 · 星期' + week[d.getDay()];
+
+    const dayP = (d.getHours()*3600 + d.getMinutes()*60 + d.getSeconds()) / 86400;
+    const yS = new Date(d.getFullYear(), 0, 1).getTime();
+    const yE = new Date(d.getFullYear() + 1, 0, 1).getTime();
+    const yP = (d.getTime() - yS) / (yE - yS);
+    tpDay.style.width = (dayP * 100).toFixed(1) + '%';
+    tpNote.textContent = '今日 ' + (dayP * 100).toFixed(1) + '% · 今年 ' + (yP * 100).toFixed(1) + '%';
   }
   tick();
   setInterval(tick, 1000);
