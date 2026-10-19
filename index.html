@@ -727,10 +727,24 @@
     overflow:hidden;
     transition:max-height .45s cubic-bezier(.22,1,.36,1), margin-top .35s ease;
   }
-  .guestbook.open .gbx{max-height:470px;margin-top:14px}
+  .guestbook.open .gbx{
+    max-height:min(72vh,780px);
+    margin-top:14px;
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(255,255,255,.14) transparent;
+  }
+  .guestbook.open .gbx::-webkit-scrollbar{width:8px}
+  .guestbook.open .gbx::-webkit-scrollbar-thumb{
+    background:rgba(255,255,255,.13);
+    border-radius:8px;
+    border:2px solid transparent;
+    background-clip:content-box;
+  }
   .gbx iframe{
-    height:440px !important;
-    max-height:440px;
+    width:100%;
+    display:block;
     border:0;
   }
   .gb-waiting{
