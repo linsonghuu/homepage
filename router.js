@@ -5,8 +5,8 @@
   var view = document.getElementById('view');
   if (!view) return;
 
-  var current = view.dataset.page || '';
-  var cache = {}; // url -> Array of original child nodes
+  var currentKey = location.pathname + location.search;
+  var cache = {}; // key(pathname+search) -> { type, nodes }
   var loadedCSS = new Set();
   document.querySelectorAll('link[rel="stylesheet"]').forEach(function (l) {
     var h = l.getAttribute('href'); if (h) loadedCSS.add(h);
@@ -54,9 +54,10 @@
     });
   }
 
-  function saveView() {
-    if (!current) return;
-    cache[current] = Array.from(view.childNodes);
+  function saveCurrent() {
+    if (view.childNodes.length) {
+      cache[currentKey] = { type: view.dataset.page || '', nodes: Array.from(view.childNodes) };
+    }
   }
 
   function clearView() {
@@ -76,12 +77,12 @@
       detail: { from: view.dataset.page, to: type, url: url }
     }));
 
-    saveView();
+    saveCurrent();
     clearView();
 
     var cached = cache[url];
-    if (cached) {
-      restoreView(cached);
+    if (cached && cached.nodes) {
+      restoreView(cached.nodes);
     } else {
       var tmp = document.createElement('div');
       tmp.innerHTML = html;
@@ -91,7 +92,21 @@
 
     view.dataset.page = type || '';
     document.title = title || document.title;
-    current = type;
+    currentKey = url;
+    if (view.childNodes.length) {
+      cache[currentKey] = { type: view.dataset.page, nodes: Array.from(view.childNodes) };
+    }
+
+    // 返回主页且本标签页已进入过 → 跳过入口门（防御：脚本异常也不应卡在门上）
+    if (view.dataset.page === 'home') {
+      var entered = false;
+      try { entered = sessionStorage.getItem('home-entered') === '1'; } catch (e) {}
+      if (entered) {
+        var g = document.getElementById('gate');
+        if (g) { g.classList.add('gone'); g.style.display = 'none'; }
+        document.body.classList.add('entered');
+      }
+    }
 
     window.dispatchEvent(new CustomEvent('spa:navigate', {
       detail: { page: type, url: url }
@@ -110,10 +125,10 @@
 
     if (push !== false) history.pushState({ spa: 1, href: href }, '', href);
 
-    var key = url.pathname + url.search;
-    var cached = cache[key];
-    if (cached) {
-      setView(key, '', '', '', []);
+    var k = url.pathname + url.search;
+    var cached = cache[k];
+    if (cached && cached.nodes) {
+      setView(k, cached.type, '', '', []);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
@@ -122,8 +137,7 @@
       .then(function (r) { if (!r.ok) throw new Error(); return r.text(); })
       .then(function (text) {
         var p = parseView(text);
-        cache[key] = null; // 首次加载后由 setView 保存
-        setView(key, p.type, p.content, p.title, p.css);
+        setView(k, p.type, p.content, p.title, p.css);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       })
       .catch(function () { location.href = href; });
@@ -151,5 +165,5 @@
   window.SPA = { navigate: function (href) { navigate(href); } };
 
   // 初始缓存当前页
-  saveView();
+  saveCurrent();
 })();
