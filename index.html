@@ -1037,6 +1037,10 @@
   .diag .vnote:focus{border-color:rgba(255,255,255,.28)}
   .diag .vmg{font-family:var(--mono);font-size:10px;padding:5px 9px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.13);background:transparent;color:#c9c9c9;flex:none}
   .diag .vmg:hover{background:rgba(255,255,255,.1);color:#fff}
+  .diag .vdel{font-family:var(--mono);font-size:10px;padding:5px 9px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,120,120,.4);background:rgba(255,80,80,.16);color:#ff9a9a;flex:none;margin-left:auto}
+  .diag .vdel:hover{background:rgba(255,80,80,.3);color:#ffd0d0}
+  .diag .va-danger{font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,120,120,.5);background:rgba(255,80,80,.2);color:#ffb3b3}
+  .diag .va-danger:hover{background:rgba(255,80,80,.34);color:#fff}
   .diag .vsearch::placeholder{opacity:.35}
   .diag .vsearch:focus{border-color:rgba(255,255,255,.3)}
   .diag .vlist{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent;padding-right:2px;margin-top:2px}
@@ -2329,6 +2333,7 @@
         <div class="vadmin" id="vAdmin">
           <div class="va-row"><span class="va-l">站长令牌</span><input id="vaTok" type="password" placeholder="填 ADMIN_TOKEN 解锁备注/合并" autocomplete="off"><span class="va-hint">仅存本机，普通访客无此面板</span></div>
           <div class="va-row"><span class="va-l">合并访客</span><input id="vaFrom" placeholder="来源指纹" autocomplete="off"><span class="va-arrow">→</span><input id="vaInto" placeholder="目标指纹" autocomplete="off"><button id="vaMerge">合并</button><span class="va-msg" id="vaMsg"></span></div>
+          <div class="va-row"><span class="va-l">清空</span><button id="vaClear" class="va-danger">清空全部访客</button><span class="va-hint">删除所有访客记录与备注（不可恢复，会同步到快照）</span></div>
         </div>
         <div class="vlist" id="vList"><span class="muted">未配置后端或尚未加载</span></div>
       </div>
@@ -2584,7 +2589,8 @@
     function getGA(){ try{ return localStorage.getItem('gadmin-token') || ''; }catch(e){ return ''; } }
     function vadmrow(fp, note){
       return '<div class="vadmrow"><input class="vnote" data-fp="'+esc(fp)+'" value="'+esc(note||'')+'" placeholder="备注（如昵称/身份）…" maxlength="120">'
-           + '<button class="vmg" data-fp="'+esc(fp)+'" title="作为合并来源">并入→</button></div>';
+           + '<button class="vmg" data-fp="'+esc(fp)+'" title="作为合并来源">并入→</button>'
+           + '<button class="vdel" data-fp="'+esc(fp)+'" title="删除该访客记录（含备注）">删除</button></div>';
     }
     function saveNote(fp, note){
       var tok = getGA(); if(!tok) return;
@@ -2609,14 +2615,35 @@
         })
         .catch(function(){ if(msg) msg.textContent='网络错误'; });
     }
+    function deleteVisitor(fp){
+      var tok = getGA(); if(!tok){ setSnap('先填写站长令牌'); return; }
+      if(!confirm('确定删除该访客记录（含备注）？此操作不可恢复。')) return;
+      setSnap('删除中… ' + fp);
+      fetch(WORKER + '/admin/delete?token=' + encodeURIComponent(tok), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fp:fp }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if(d && d.ok){ setSnap('已删除 ' + fp); loadAllVisitors(); } else setSnap('删除失败：' + ((d&&d.err)||'未知')); })
+        .catch(function(){ setSnap('删除失败（网络）'); });
+    }
     (function wireAdmin(){
       var g = document.getElementById('gAll'); if(!g) return;
       var tok = document.getElementById('vaTok'); if(tok && getGA()) tok.value = getGA();
       if(tok) tok.addEventListener('change', function(){ try{ localStorage.setItem('gadmin-token', tok.value.trim()); }catch(e){} renderVisitors(); });
-      g.addEventListener('click', function(e){ var mg=e.target.closest('.vmg'); if(!mg) return; var f=mg.getAttribute('data-fp'); var from=document.getElementById('vaFrom'); if(from){ from.value=f; from.focus(); } });
+      g.addEventListener('click', function(e){
+        var mg=e.target.closest('.vmg'); if(mg){ var f=mg.getAttribute('data-fp'); var from=document.getElementById('vaFrom'); if(from){ from.value=f; from.focus(); } return; }
+        var dl=e.target.closest('.vdel'); if(dl){ if(confirm('确定删除该访客记录（含备注）？此操作不可恢复。')) deleteVisitor(dl.getAttribute('data-fp')); }
+      });
       g.addEventListener('change', function(e){ if(e.target.classList && e.target.classList.contains('vnote')) saveNote(e.target.getAttribute('data-fp'), e.target.value); });
       g.addEventListener('keydown', function(e){ if(e.target.classList && e.target.classList.contains('vnote') && e.key==='Enter'){ e.preventDefault(); saveNote(e.target.getAttribute('data-fp'), e.target.value); e.target.blur(); } });
       var mb = document.getElementById('vaMerge'); if(mb) mb.addEventListener('click', doMerge);
+      var cb = document.getElementById('vaClear'); if(cb) cb.addEventListener('click', function(){
+        if(!getGA()){ setSnap('先填写站长令牌'); return; }
+        if(!confirm('确定清空全部访客记录与备注？此操作不可恢复。')) return;
+        setSnap('清空中…');
+        fetch(WORKER + '/admin/clear?token=' + encodeURIComponent(getGA()), { method:'POST', headers:{'Content-Type':'application/json'}, body:'{}' })
+          .then(function(r){ return r.json(); })
+          .then(function(d){ if(d && d.ok){ setSnap('已清空全部访客'); loadAllVisitors(); } else setSnap('清空失败：' + ((d&&d.err)||'未知')); })
+          .catch(function(){ setSnap('清空失败（网络）'); });
+      });
     })();
 
     function collect(){
