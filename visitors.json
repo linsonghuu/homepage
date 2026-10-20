@@ -1,7 +1,7 @@
 {
   "ok": true,
   "total": 75,
-  "unique": 3,
+  "unique": 2,
   "visitors": [
     {
       "fp": "7a81898d",
@@ -17,17 +17,6 @@
       "webdriver": false
     },
     {
-      "fp": "75e3e13c",
-      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
-      "platform": "Windows",
-      "gpu": "ANGLE (Intel, Intel(R) HD Graphics 620 (0x00005916) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "2001:41d0:801:2000::6587",
-      "city": "Erith · GB",
-      "first": 1792454493921,
-      "last": 1792454493921,
-      "count": 1
-    },
-    {
       "fp": "d4f8e800",
       "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1",
       "platform": "Linux x86_64",
@@ -39,5 +28,5 @@
       "count": 1
     }
   ],
-  "syncedAt": 1792521095811
+  "syncedAt": 1792521100461
 }
