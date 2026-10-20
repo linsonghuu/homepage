@@ -1266,6 +1266,7 @@
     </ul>
   </div>
 
+<script src="/player-bridge.js"></script>
 <script>
     const clockEl = document.getElementById('clock');
   const dateEl  = document.getElementById('date');
@@ -1568,20 +1569,26 @@
     pickInitial();
     kickAudio();
 
-    // 恢复播放进度与状态
-    if (r && typeof r.t === 'number'){
-      var seek = function(){ audio.currentTime = r.t; audio.removeEventListener('loadedmetadata', seek); };
-      if (audio.readyState >= 1) audio.currentTime = r.t; else audio.addEventListener('loadedmetadata', seek);
-    }
-
     if (window.requestIdleCallback) requestIdleCallback(() => { try { ensureGiscus(); } catch(err){} }, { timeout: 6000 });
     else setTimeout(() => { try { ensureGiscus(); } catch(err){} }, 4500);
 
-    if (!r || r.playing !== false){
-      audio.play().catch(() => {
-        playerbar.classList.add('blocked');
-        document.body.classList.add('need-tap');
-      });
+    // 播放：立即 play，再用短轮询在 seekable 就绪后把进度跳到上次位置（健壮，避免 load() 复位又从头播）
+    var wantPlay = (!r || r.playing !== false);
+    var needTap = function(){ playerbar.classList.add('blocked'); document.body.classList.add('need-tap'); };
+    if (r && typeof r.t === 'number'){
+      if (wantPlay) audio.play().catch(needTap);
+      var n = 0;
+      (function fix(){
+        try {
+          if (r.t && Math.abs(audio.currentTime - r.t) > 2){
+            var end = (audio.seekable.length ? audio.seekable.end(0) : (audio.duration || 0));
+            if (end >= r.t - 1) audio.currentTime = r.t;
+          }
+        } catch(e){}
+        if (++n < 15) setTimeout(fix, 180);
+      })();
+    } else if (wantPlay){
+      audio.play().catch(needTap);
     }
   }
 
@@ -1590,7 +1597,10 @@
     if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); enterSite(); }
   });
   // 从图片集/子页返回主页：同标签页内已进入过 → 跳过入口门直接进主页
-  try { if (sessionStorage.getItem('home-entered')==='1') enterSite(); } catch(err){}
+  // （推迟到当前脚本执行完之后：否则 auto-enter 在解析期调用 enterSite→kickAudio 会读到 let analyser 的 TDZ 而抛错）
+  requestAnimationFrame(function(){
+    try { if (sessionStorage.getItem('home-entered')==='1') enterSite(); } catch(err){}
+  });
 
   function totalTime(){
     const d = audio.duration;
@@ -2783,6 +2793,5 @@
   }catch(e){}
 })();
 </script>
-<script src="/player-bridge.js"></script>
 </body>
 </html>
