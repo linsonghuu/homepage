@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "total": 11,
+  "total": 12,
   "unique": 5,
   "visitors": [
     {
@@ -8,11 +8,11 @@
       "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "platform": "Windows",
       "gpu": "ANGLE (AMD, AMD Radeon RX 9070 XT (0x00007550) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "67.159.48.148",
-      "city": "Singapore · SG",
+      "ip": "103.62.49.170",
+      "city": "Tokyo · JP",
       "first": 1792480590766,
-      "last": 1792490252884,
-      "count": 7,
+      "last": 1792498450790,
+      "count": 8,
       "verdict": "human",
       "webdriver": false
     },
@@ -63,5 +63,5 @@
       "count": 1
     }
   ],
-  "syncedAt": 1792491793547
+  "syncedAt": 1792498452076
 }
