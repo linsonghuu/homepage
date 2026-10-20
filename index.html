@@ -974,6 +974,7 @@
   .diag .vstat{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);white-space:nowrap}
   .diag .chip{display:inline-flex;align-items:baseline;gap:5px;font-size:10px;opacity:.72;padding:3px 10px;border:1px solid rgba(255,255,255,.12);border-radius:20px}
   .diag .chip b{font-size:14px;opacity:.95;font-weight:600}
+  .diag .chip.warn{opacity:.9;border-color:rgba(255,200,120,.4);color:rgba(255,200,120,.95)}
   .diag .vseg{display:inline-flex;border:1px solid rgba(255,255,255,.14);border-radius:7px;overflow:hidden;margin-left:auto}
   .diag .vseg button{font-family:inherit;font-size:10.5px;padding:4px 9px;background:transparent;color:#f5f5f5;opacity:.5;cursor:pointer;border:none;transition:opacity .15s,background .15s}
   .diag .vseg button:hover{opacity:.85}
@@ -2194,6 +2195,11 @@
             <button data-sort="recent" class="on">最近</button>
             <button data-sort="count">次数</button>
           </span>
+          <span class="vseg" id="vVerdict">
+            <button data-v="all" class="on">全部</button>
+            <button data-v="human">真人</button>
+            <button data-v="bot">机器人</button>
+          </span>
           <input class="vsearch" id="vSearch" type="text" placeholder="搜索：指纹 / GPU / 城市 / IP / UA…" autocomplete="off">
         </div>
         <div class="vlist" id="vList"><span class="muted">未配置后端或尚未加载</span></div>
@@ -2269,7 +2275,7 @@
     // ===== 全访客统计后端（需自行部署 Cloudflare Worker，见 worker.js）=====
     var WORKER = 'https://linsonghuu-visitors.linsonghuu.workers.dev';   // 访客统计后端（Cloudflare Worker）
     var READ_SECRET = 'YQ03A-gdiDtPPZeQ4xVrCF0DrXz29aVX';   // 与 Worker 环境变量一致，用于站长拉取全量访客
-    var diagVisitors = [], diagSort = 'recent', diagSearch = '', diagExplain = false;
+    var diagVisitors = [], diagSort = 'recent', diagSearch = '', diagExplain = false, diagFilter = 'all';
 
     function computeFp(){
       var ua = navigator.userAgent;
@@ -2371,8 +2377,9 @@
         .then(function(d){
           if(!d || !d.ok){ box.innerHTML = '<span class="muted">拉取失败：' + esc(d && d.err) + '</span>'; return; }
           diagVisitors = d.visitors || [];
+          var bots = diagVisitors.filter(function(v){ return botVerdict(v)!=='human'; }).length;
           var st = document.getElementById('vStat');
-          if(st) st.innerHTML = '<span class="chip"><b>'+(d.total||0)+'</b> 总访问</span><span class="chip"><b>'+(d.unique||0)+'</b> 独立访客</span>';
+          if(st) st.innerHTML = '<span class="chip"><b>'+(d.total||0)+'</b> 总访问</span><span class="chip"><b>'+(d.unique||0)+'</b> 独立访客</span><span class="chip warn"><b>'+bots+'</b> 机器人</span>';
           var bd = document.getElementById('diagBadge');
           if(bd) bd.textContent = (d.unique||0) + ' 位访客';
           renderVisitors();
@@ -2386,6 +2393,12 @@
       if(q){
         list = list.filter(function(v){
           return [v.fp, v.gpu, v.city, v.ua, v.platform].filter(Boolean).some(function(s){ return s.toLowerCase().indexOf(q)>=0; });
+        });
+      }
+      if(diagFilter!=='all'){
+        list = list.filter(function(v){
+          var k = botVerdict(v);
+          return diagFilter==='bot' ? (k!=='human') : (k==='human');
         });
       }
       if(sort==='count') list.sort(function(a,b){ return (b.count||0)-(a.count||0) || (b.last||0)-(a.last||0); });
@@ -2568,6 +2581,13 @@
       });
       var si = document.getElementById('vSearch');
       if(si) si.addEventListener('input', function(e){ diagSearch = e.target.value || ''; renderVisitors(); });
+      var vseg = document.getElementById('vVerdict');
+      if(vseg) vseg.addEventListener('click', function(e){
+        var b = e.target.closest('button'); if(!b) return;
+        diagFilter = b.getAttribute('data-v') || 'all';
+        vseg.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); });
+        renderVisitors();
+      });
       var ex = document.getElementById('diagExplain');
       if(ex) ex.addEventListener('click', function(){
         diagExplain = !diagExplain;
