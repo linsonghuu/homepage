@@ -1,7 +1,7 @@
 {
   "ok": true,
   "total": 75,
-  "unique": 4,
+  "unique": 3,
   "visitors": [
     {
       "fp": "7a81898d",
@@ -15,17 +15,6 @@
       "count": 64,
       "verdict": "human",
       "webdriver": false
-    },
-    {
-      "fp": "408af26b",
-      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
-      "platform": "Windows",
-      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1060 Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "72.153.230.168",
-      "city": "San Jose · US",
-      "first": 1792471573177,
-      "last": 1792471573177,
-      "count": 1
     },
     {
       "fp": "75e3e13c",
@@ -50,5 +39,5 @@
       "count": 1
     }
   ],
-  "syncedAt": 1792521089965
+  "syncedAt": 1792521095811
 }
