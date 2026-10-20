@@ -1,69 +1,19 @@
 {
   "items": [
     {
-      "id": "jiebudiao",
-      "title": "節部凋",
-      "date": "2026-10-18",
-      "category": "Artwork",
+      "id": "demo",
+      "title": "照片占位",
+      "date": "2026-10-20",
+      "category": "示例",
       "tags": [
-        "cover",
-        "illustration",
-        "demo"
+        "demo",
+        "placeholder"
       ],
-      "description": "内置示例（原图来自站点封面）。在 gallery.json 里增删条目即可管理相册；把照片放进 images/gallery/original/ 并加一条就能上线。",
-      "original": "/images/gallery/original/jiebudiao.jpg",
-      "thumbnail": "/images/gallery/thumbnails/jiebudiao.webp",
-      "preview": "/images/gallery/preview/jiebudiao.webp",
-      "width": 500,
-      "height": 500
-    },
-    {
-      "id": "lianrenxin",
-      "title": "恋人心",
-      "date": "2026-10-19",
-      "category": "Life",
-      "tags": [
-        "cover",
-        "demo"
-      ],
-      "description": "",
-      "original": "/images/gallery/original/lianrenxin.jpg",
-      "thumbnail": "/images/gallery/thumbnails/lianrenxin.webp",
-      "preview": "/images/gallery/preview/lianrenxin.webp",
-      "width": 500,
-      "height": 500
-    },
-    {
-      "id": "lonely-day",
-      "title": "Lonely Day",
-      "date": "2026-10-18",
-      "category": "Favorites",
-      "tags": [
-        "cover",
-        "demo"
-      ],
-      "description": "",
-      "original": "/images/gallery/original/lonely-day.jpg",
-      "thumbnail": "/images/gallery/thumbnails/lonely-day.webp",
-      "preview": "/images/gallery/preview/lonely-day.webp",
-      "width": 1500,
-      "height": 1500
-    },
-    {
-      "id": "you",
-      "title": "You · Lane 8",
-      "date": "2026-10-18",
-      "category": "Screenshots",
-      "tags": [
-        "cover",
-        "demo"
-      ],
-      "description": "",
-      "original": "/images/gallery/original/you.jpg",
-      "thumbnail": "/images/gallery/thumbnails/you.webp",
-      "preview": "/images/gallery/preview/you.webp",
-      "width": 500,
-      "height": 500
+      "description": "这是一张占位图。把真实照片放进 gallery-src/original/，在 gallery.json 增加一条，再运行 build-gallery.py 即可。",
+      "thumbnail": "/images/gallery/thumbnails/demo.webp",
+      "display": "/images/gallery/display/demo.webp",
+      "width": 1600,
+      "height": 1000
     }
   ]
 }
