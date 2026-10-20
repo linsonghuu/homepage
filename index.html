@@ -220,9 +220,8 @@
     display:grid;
     grid-template-columns:repeat(3,1fr);
     grid-template-areas:
-      "profile about about"
-      "time    links weather"
-      "birthday birthday birthday";
+      "profile about birthday"
+      "time    links weather";
     gap:11px;
   }
 
@@ -526,28 +525,19 @@
     min-height:11px;
   }
 
-  .birthday{flex-direction:row;align-items:center;gap:18px;padding:16px 20px}
-  .birthday .h{margin:0;flex:none}
-  .bd-main{flex:1;min-width:0;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-  .bd-date{
-    font-family:var(--mono);
-    font-size:clamp(17px,2vw,21px);
-    font-weight:700;
-    letter-spacing:.06em;
-    font-variant-numeric:tabular-nums;
-    display:flex;align-items:baseline;gap:5px;
-  }
-  .bd-date i{opacity:.28;font-style:normal;font-weight:400}
+  .birthday{gap:12px}
+  .bd-main{display:flex;justify-content:center}
   .bd-note{
-    font-size:11.5px;
-    font-weight:500;
-    opacity:.42;
+    font-family:var(--mono);
+    font-size:clamp(16px,2.2vw,19px);
+    font-weight:600;
     letter-spacing:.02em;
+    opacity:.9;
     white-space:nowrap;
   }
+  .bd-note b{font-size:1.2em;font-weight:700;color:#f5f5f5}
   .bd-bar{
-    flex:none;
-    width:min(180px,26vw);
+    width:100%;
     height:3px;
     border-radius:99px;
     background:rgba(255,255,255,.07);
@@ -943,7 +933,7 @@
     .bento{
       grid-template-columns:1fr;
       grid-template-areas:
-        "profile" "about" "time" "links" "weather" "birthday";
+        "profile" "about" "birthday" "time" "links" "weather";
       gap:9px;
     }
     .cell{border-radius:22px;padding:18px 15px}
@@ -1114,7 +1104,6 @@
           Birthday
         </div>
         <div class="bd-main">
-          <div class="bd-date"><b>2006</b><i>·</i><b>11</b><i>·</i><b>21</b></div>
           <div class="bd-note" id="bdNote">—</div>
         </div>
         <div class="bd-bar"><i id="bdFill"></i></div>
@@ -1293,16 +1282,15 @@
     const isToday = next.getTime() === today.getTime();
     const prev = new Date(next.getFullYear() - 1, BDAY.m - 1, BDAY.d);
     const daysLeft = Math.round((next - today) / 86400000);
-    const age = next.getFullYear() - BDAY.y - (isToday ? 0 : 1);
     const progress = Math.min(1, Math.max(0, (today - prev) / (next - prev)));
 
     const note = document.getElementById('bdNote');
     const fill = document.getElementById('bdFill');
     if (isToday){
-      note.textContent = '生日快乐 · 今天 ' + age + ' 岁';
+      note.innerHTML = '生日快乐 · <b>就是今天</b>';
       document.body.classList.add('birthday-today');
     } else {
-      note.textContent = age + ' 岁 · 还有 ' + daysLeft + ' 天';
+      note.innerHTML = '还有 <b>' + daysLeft + '</b> 天';
     }
     fill.style.width = (progress * 100).toFixed(1) + '%';
   }
