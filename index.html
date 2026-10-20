@@ -975,7 +975,8 @@
   .diag .chip{display:inline-flex;align-items:baseline;gap:5px;font-size:10px;opacity:.72;padding:3px 10px;border:1px solid rgba(255,255,255,.12);border-radius:20px}
   .diag .chip b{font-size:14px;opacity:.95;font-weight:600}
   .diag .chip.warn{opacity:.9;border-color:rgba(255,200,120,.4);color:rgba(255,200,120,.95)}
-  .diag .vseg{display:inline-flex;border:1px solid rgba(255,255,255,.14);border-radius:7px;overflow:hidden;margin-left:auto}
+  .diag .vseg{display:inline-flex;border:1px solid rgba(255,255,255,.14);border-radius:7px;overflow:hidden}
+  .diag .vbar #vSort{margin-left:auto}
   .diag .vseg button{font-family:inherit;font-size:10.5px;padding:4px 9px;background:transparent;color:#f5f5f5;opacity:.5;cursor:pointer;border:none;transition:opacity .15s,background .15s}
   .diag .vseg button:hover{opacity:.85}
   .diag .vseg button.on{opacity:1;background:rgba(255,255,255,.1)}
@@ -1013,8 +1014,8 @@
   .diag .vcard .vc{font-family:var(--mono);font-size:10px;opacity:.5}
   .diag .vcard.det .vmeta{display:block}
   .diag .vcard .vrow{display:flex;gap:8px;font-size:11px;padding:2px 0;align-items:baseline}
-  .diag .vcard .vrow .kl{flex:none;width:44px;opacity:.5}
-  .diag .vcard .vrow .vv{opacity:.9;word-break:break-all;font-family:var(--mono);font-size:10.5px}
+  .diag .vcard .vrow .kl{flex:none;min-width:46px;width:54px;white-space:nowrap;opacity:.5}
+  .diag .vcard .vrow .vv{flex:1;min-width:0;opacity:.9;word-break:break-all;font-family:var(--mono);font-size:10.5px}
   .diag .vtag.ok{opacity:.6;border-color:rgba(255,255,255,.16)}
   .diag .vtag.warn{opacity:.85;border-color:rgba(255,200,120,.4);color:rgba(255,200,120,.95)}
   .diag .vtag.bad{opacity:.9;border-color:rgba(255,150,150,.45);color:rgba(255,150,150,.95)}
@@ -2399,7 +2400,7 @@
       diagVisitors = d.visitors || [];
       var bots = diagVisitors.filter(function(v){ return botVerdict(v)!=='human'; }).length;
       var st = document.getElementById('vStat');
-      if(st) st.innerHTML = '<span class="chip"><b>'+(d.total||0)+'</b> 总访问</span><span class="chip"><b>'+(d.unique||0)+'</b> 独立访客</span><span class="chip warn"><b>'+bots+'</b> 机器人</span>';
+      if(st) st.innerHTML = '<span class="chip"><b>'+(d.total||0)+'</b> 总访问</span><span class="chip"><b>'+(d.unique||0)+'</b> 独立访客</span><span class="chip'+(bots?' warn':'')+'"><b>'+bots+'</b> 机器人</span>';
       var bd = document.getElementById('diagBadge');
       if(bd) bd.textContent = (d.unique||0) + ' 位访客';
       setSnap(mode==='snap' ? ('快照 · 同步于 ' + (d.syncedAt ? fmt(d.syncedAt) : '未知') + (reason ? '（' + reason + '）' : '')) : '实时');
