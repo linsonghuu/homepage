@@ -980,6 +980,8 @@
   .diag .vseg button:hover{opacity:.85}
   .diag .vseg button.on{opacity:1;background:rgba(255,255,255,.1)}
   .diag .vsearch{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11px;padding:7px 11px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;outline:none}
+  .diag .snap{font-family:var(--mono);font-size:9.5px;opacity:.5;margin:0 0 8px;letter-spacing:.02em}
+  .diag .snap.warn{opacity:.8;color:rgba(255,200,120,.92)}
   .diag .vsearch::placeholder{opacity:.35}
   .diag .vsearch:focus{border-color:rgba(255,255,255,.3)}
   .diag .vlist{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent;padding-right:2px;margin-top:2px}
@@ -2202,6 +2204,7 @@
           </span>
           <input class="vsearch" id="vSearch" type="text" placeholder="搜索：指纹 / GPU / 城市 / IP / UA…" autocomplete="off">
         </div>
+        <div class="snap" id="vSnap"></div>
         <div class="vlist" id="vList"><span class="muted">未配置后端或尚未加载</span></div>
       </div>
     </div>
@@ -2275,6 +2278,7 @@
     // ===== 全访客统计后端（需自行部署 Cloudflare Worker，见 worker.js）=====
     var WORKER = 'https://linsonghuu-visitors.linsonghuu.workers.dev';   // 访客统计后端（Cloudflare Worker）
     var READ_SECRET = 'YQ03A-gdiDtPPZeQ4xVrCF0DrXz29aVX';   // 与 Worker 环境变量一致，用于站长拉取全量访客
+    var SNAP_URL = 'visitors.json';   // 同源兜底快照（github.io 在中国可直连；Worker 拉不到时回退到它）
     var diagVisitors = [], diagSort = 'recent', diagSearch = '', diagExplain = false, diagFilter = 'all';
 
     function computeFp(){
@@ -2370,21 +2374,40 @@
     function loadAllVisitors(){
       var box = document.getElementById('vList');
       if(!box) return;
-      if(!WORKER){ box.innerHTML = '<span class="muted">未配置后端（WORKER 为空）</span>'; return; }
+      if(!WORKER){ return loadFromSnap(box, '未配置后端（WORKER 为空）'); }
       box.innerHTML = '<span class="muted">加载中…</span>';
       fetch(WORKER + '/visits?secret=' + encodeURIComponent(READ_SECRET || ''))
         .then(function(r){ return r.json(); })
         .then(function(d){
-          if(!d || !d.ok){ box.innerHTML = '<span class="muted">拉取失败：' + esc(d && d.err) + '</span>'; return; }
-          diagVisitors = d.visitors || [];
-          var bots = diagVisitors.filter(function(v){ return botVerdict(v)!=='human'; }).length;
-          var st = document.getElementById('vStat');
-          if(st) st.innerHTML = '<span class="chip"><b>'+(d.total||0)+'</b> 总访问</span><span class="chip"><b>'+(d.unique||0)+'</b> 独立访客</span><span class="chip warn"><b>'+bots+'</b> 机器人</span>';
-          var bd = document.getElementById('diagBadge');
-          if(bd) bd.textContent = (d.unique||0) + ' 位访客';
-          renderVisitors();
+          if(!d || !d.ok){ return loadFromSnap(box, '拉取失败：' + esc(d && d.err)); }
+          applyVisitorData(d, 'live');
         })
-        .catch(function(){ box.innerHTML = '<span class="muted">网络错误</span>'; });
+        .catch(function(){ return loadFromSnap(box, '网络错误（国内可能需梯子）'); });
+    }
+    // Worker 不可达时，回退到同源静态快照 visitors.json（github.io 在中国可直连）
+    function loadFromSnap(box, reason){
+      if(!box) box = document.getElementById('vList');
+      fetch(SNAP_URL + '?t=' + Date.now())
+        .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+        .then(function(d){
+          if(!d || !d.ok){ box.innerHTML = '<span class="muted">' + (reason||'') + '，且无本地快照</span>'; setSnap('—'); return; }
+          applyVisitorData(d, 'snap', reason);
+        })
+        .catch(function(){ box.innerHTML = '<span class="muted">' + (reason||'') + '，且无本地快照</span>'; setSnap('—'); });
+    }
+    function applyVisitorData(d, mode, reason){
+      diagVisitors = d.visitors || [];
+      var bots = diagVisitors.filter(function(v){ return botVerdict(v)!=='human'; }).length;
+      var st = document.getElementById('vStat');
+      if(st) st.innerHTML = '<span class="chip"><b>'+(d.total||0)+'</b> 总访问</span><span class="chip"><b>'+(d.unique||0)+'</b> 独立访客</span><span class="chip warn"><b>'+bots+'</b> 机器人</span>';
+      var bd = document.getElementById('diagBadge');
+      if(bd) bd.textContent = (d.unique||0) + ' 位访客';
+      setSnap(mode==='snap' ? ('快照 · 同步于 ' + (d.syncedAt ? fmt(d.syncedAt) : '未知') + (reason ? '（' + reason + '）' : '')) : '实时');
+      renderVisitors();
+    }
+    function setSnap(txt){
+      var el = document.getElementById('vSnap');
+      if(el){ el.textContent = txt || ''; el.classList.toggle('warn', /快照/.test(txt||'')); }
     }
     function renderVisitors(){
       var box = document.getElementById('vList'); if(!box) return;
