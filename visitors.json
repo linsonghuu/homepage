@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "total": 51,
+  "total": 64,
   "unique": 8,
   "visitors": [
     {
@@ -11,8 +11,21 @@
       "ip": "103.62.49.162",
       "city": "Tokyo · JP",
       "first": 1792480590766,
-      "last": 1792515038830,
-      "count": 41,
+      "last": 1792516869112,
+      "count": 53,
+      "verdict": "human",
+      "webdriver": false
+    },
+    {
+      "fp": "69ca45ae",
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) WorkBuddyAI/5.8.4 workbuddy-ai/5.8.4 Chrome/138.0.7204.251 Electron/37.10.3 Safari/537.36",
+      "platform": "Windows",
+      "gpu": "ANGLE (AMD, AMD Radeon RX 9070 XT (0x00007550) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ip": "103.62.49.162",
+      "city": "Tokyo · JP",
+      "first": 1792499905639,
+      "last": 1792516749663,
+      "count": 5,
       "verdict": "human",
       "webdriver": false
     },
@@ -26,19 +39,6 @@
       "first": 1792512804066,
       "last": 1792512804066,
       "count": 1,
-      "verdict": "human",
-      "webdriver": false
-    },
-    {
-      "fp": "69ca45ae",
-      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) WorkBuddyAI/5.8.4 workbuddy-ai/5.8.4 Chrome/138.0.7204.251 Electron/37.10.3 Safari/537.36",
-      "platform": "Windows",
-      "gpu": "ANGLE (AMD, AMD Radeon RX 9070 XT (0x00007550) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "103.62.49.170",
-      "city": "Tokyo · JP",
-      "first": 1792499905639,
-      "last": 1792504481187,
-      "count": 4,
       "verdict": "human",
       "webdriver": false
     },
@@ -102,5 +102,5 @@
       "count": 1
     }
   ],
-  "syncedAt": 1792516633104
+  "syncedAt": 1792516890406
 }
