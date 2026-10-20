@@ -947,6 +947,9 @@
   .diag .phead h3 .x{cursor:pointer;opacity:.5;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px}
   .diag .phead h3 .x:hover{opacity:1;background:rgba(255,255,255,.08)}
   .diag .phead .pbadge{font-family:var(--mono);font-size:10px;letter-spacing:.04em;opacity:.5;white-space:nowrap}
+  .diag .ptoggle{font-family:inherit;font-size:10px;letter-spacing:.04em;padding:3px 9px;border:1px solid rgba(255,255,255,.16);border-radius:20px;background:transparent;color:#f5f5f5;opacity:.55;cursor:pointer;transition:opacity .15s,background .15s}
+  .diag .ptoggle:hover{opacity:.9}
+  .diag .ptoggle.on{opacity:1;background:rgba(255,255,255,.1)}
   .diag .note{font-size:10.5px;opacity:.4;margin:8px 0 2px;line-height:1.55}
   .diag .fid{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:14px;padding:13px 16px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03))}
   .diag .fid .fl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;flex:none}
@@ -954,10 +957,13 @@
   .diag .grp{margin-top:16px}
   .diag .gt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:7px;display:flex;align-items:center;gap:8px}
   .diag .gt::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
-  .diag .row{display:flex;justify-content:space-between;gap:16px;font-size:12.5px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  .diag .row{display:block;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}
   .diag .row:last-child{border-bottom:none}
-  .diag .row b{font-weight:500;opacity:.55;flex:none}
-  .diag .row span{text-align:right;font-family:var(--mono);font-size:11.5px;word-break:break-all;opacity:.92}
+  .diag .row .rline{display:flex;justify-content:space-between;gap:16px;font-size:12.5px}
+  .diag .row .rline b{font-weight:500;opacity:.55;flex:none}
+  .diag .row .rline span{text-align:right;font-family:var(--mono);font-size:11.5px;word-break:break-all;opacity:.92}
+  .diag .row .exp{font-size:10px;opacity:.42;line-height:1.55;margin-top:3px;display:none;word-break:break-all}
+  .diag.explain .row .exp{display:block}
   .diag .acts{display:flex;gap:10px;margin-top:18px}
   .diag .acts .re{margin-top:0;flex:1}
   .diag .re{font-size:11.5px;padding:9px 12px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;cursor:pointer;opacity:.8;text-align:center;transition:opacity .15s,background .15s}
@@ -999,6 +1005,16 @@
   .diag details.selfbox>summary .ssub{text-transform:none;letter-spacing:0;opacity:.45;font-size:10px}
   .diag details.selfbox .selfbody{padding:2px 14px 14px}
   .diag .muted{opacity:.4;font-size:11px;padding:4px 0;display:block}
+  /* 说明模式：全部访客卡片切换为带标签的完整数值 */
+  .diag .vcard .vright{display:flex;align-items:center;gap:6px}
+  .diag .vcard .vc{font-family:var(--mono);font-size:10px;opacity:.5}
+  .diag .vcard.det .vmeta{display:block}
+  .diag .vcard .vrow{display:flex;gap:8px;font-size:11px;padding:2px 0;align-items:baseline}
+  .diag .vcard .vrow .kl{flex:none;width:44px;opacity:.5}
+  .diag .vcard .vrow .vv{opacity:.9;word-break:break-all;font-family:var(--mono);font-size:10.5px}
+  .diag .vtag.ok{opacity:.6;border-color:rgba(255,255,255,.16)}
+  .diag .vtag.warn{opacity:.85;border-color:rgba(255,200,120,.4);color:rgba(255,200,120,.95)}
+  .diag .vtag.bad{opacity:.9;border-color:rgba(255,150,150,.45);color:rgba(255,150,150,.95)}
 
   @media (prefers-reduced-motion:reduce){
     *{transition:none!important;animation:none!important}
@@ -2167,6 +2183,7 @@
     <div class="phead">
       <h3>访客面板 · Visitors<span class="x" id="diagClose" title="关闭">×</span></h3>
       <span class="pbadge" id="diagBadge">—</span>
+      <button class="ptoggle" id="diagExplain" title="解释每项信息的含义，并把访客信息展开为完整字段">说明</button>
     </div>
     <p class="note">以下为浏览器在不请求任何权限（无定位 / 摄像头 / 通讯录等弹窗）的前提下，可直接读取的信息。仅你本人输入口令可见，访客无感。本站会汇总所有访客的匿名设备指纹与大致地理位置用于统计（经 Cloudflare Worker，不申请任何权限），数据仅站长可见。</p>
     <div class="grp"><div class="gt">全部访客 / All Visitors</div>
@@ -2211,9 +2228,13 @@
 
     function row(parent, label, val){
       var r = document.createElement('div'); r.className='row';
+      var line = document.createElement('div'); line.className='rline';
       var b = document.createElement('b'); b.textContent=label;
       var s = document.createElement('span'); s.textContent=(val==null||val===''?'—':val);
-      r.appendChild(b); r.appendChild(s); parent.appendChild(r);
+      line.appendChild(b); line.appendChild(s); r.appendChild(line);
+      var ex = EXP[label];
+      if(ex){ b.title = ex; var e = document.createElement('div'); e.className='exp'; e.textContent = ex; r.appendChild(e); }
+      parent.appendChild(r);
     }
 
     function canvasFP(){
@@ -2248,7 +2269,7 @@
     // ===== 全访客统计后端（需自行部署 Cloudflare Worker，见 worker.js）=====
     var WORKER = 'https://linsonghuu-visitors.linsonghuu.workers.dev';   // 访客统计后端（Cloudflare Worker）
     var READ_SECRET = 'YQ03A-gdiDtPPZeQ4xVrCF0DrXz29aVX';   // 与 Worker 环境变量一致，用于站长拉取全量访客
-    var diagVisitors = [], diagSort = 'recent', diagSearch = '';
+    var diagVisitors = [], diagSort = 'recent', diagSearch = '', diagExplain = false;
 
     function computeFp(){
       var ua = navigator.userAgent;
@@ -2272,10 +2293,72 @@
       if(s<86400) return Math.floor(s/3600)+'h 前';
       return Math.floor(s/86400)+'d 前';
     }
-    function reportVisit(fpId, ua, plat, gpu){
+    function fmt(ts){ if(!ts) return '—'; try{ return new Date(ts).toLocaleString('zh-CN',{hour12:false}); }catch(e){ return String(ts); } }
+    var BOT_UA = /bot|crawl|spider|slurp|headless|python-requests|curl|wget|go-http|java\/|okhttp|scrapy|phantom|selenium|puppeteer|playwright|axios|httpclient|python-urllib/i;
+    function botVerdict(v){
+      if(v && v.verdict) return v.verdict;            // 'human' | 'bot' | 'auto'
+      return BOT_UA.test((v && v.ua || '').toLowerCase()) ? 'bot' : 'human';
+    }
+    function verdictView(v){
+      var k = botVerdict(v);
+      if(k==='auto') return {cls:'bad', txt:'机器/自动化'};
+      if(k==='bot')  return {cls:'warn', txt:'疑似机器人'};
+      return {cls:'ok', txt:'真人'};
+    }
+    function vrow(k,val){ return '<div class="vrow" title="'+(EXP[k]||'')+'"><span class="kl">'+k+'</span><span class="vv">'+val+'</span></div>'; }
+    var EXP = {
+      'User Agent':'浏览器自报的“身份字符串”，含系统/浏览器/版本与渲染引擎。任何人都可伪造，只能参考。',
+      '平台 / Platform':'操作系统平台，如 Win32 / MacIntel / Linux x86_64。',
+      'UA Client Hints':'新版 UA 的精简字段（浏览器/系统/机型），更难被随意伪造。',
+      '厂商 / Vendor':'浏览器内核厂商（多为 Google / Apple / 其它）。',
+      '语言 / Languages':'界面与首选语言列表，可粗略推断地区。',
+      '时区 / Timezone':'系统时区（如 Asia/Shanghai）与相对 UTC 偏移，结合语言可推测国家。',
+      '本地时间':'访客设备当前时间，与时区交叉验证城市。',
+      '网络状态':'设备当前是否联网。',
+      'CPU 核心数':'navigator.hardwareConcurrency，逻辑核心数，粗略判断设备档次。',
+      '内存 / Device Memory':'navigator.deviceMemory（GB），是约数且可被浏览器隐藏。',
+      '最大触摸点':'navigator.maxTouchPoints，触屏支持点数，0 多为桌面。',
+      '指针类型':'精确（鼠标）或粗略（触摸），区分桌面与移动端。',
+      '是否自动化':'navigator.webdriver 为 true 表示由脚本/无头浏览器驱动（机器人/爬虫/自动化测试），真人浏览器通常为 false。',
+      'Do Not Track':'用户是否开启“请勿追踪”，仅表达意愿、网站可不遵守。',
+      'Global Privacy Ctrl':'GPC 信号，表达“拒绝被出售数据”的意愿，仅部分网站遵守。',
+      'Cookie 启用':'浏览器是否启用 Cookie，关掉会影响登录态与会话。',
+      'JS 堆内存':'performance.memory 的内存占用，仅 Chromium 提供。',
+      '分辨率':'屏幕物理像素分辨率（宽 × 高）。',
+      '可用区域':'扣除任务栏后的可工作区域。',
+      '像素比 DPR':'设备像素比，越大屏幕越清晰（Retina 多为 2~3）。',
+      '色彩深度':'每像素位数，主流 24bit；异常值可能是伪装或虚拟机。',
+      '窗口大小':'当前浏览器窗口尺寸。',
+      '屏幕方向':'横屏 / 竖屏。',
+      '连接类型':'effectiveType，网络类型（4g/3g/wifi 等），基于测速估算。',
+      '下行速度':'navigator.connection.downlink，估算下行带宽（Mbps）。',
+      'RTT 延迟':'往返时延（毫秒），越小越快。',
+      '省流量模式':'是否开启 Data Saver。',
+      'IP 地址':'访客公网 IP，由 Cloudflare 边缘提供，属个人信息，仅站长可见。',
+      '地理位置':'由 IP 反查的大致城市与国家，精度到城市级，非精确定位。',
+      '运营商 / ISP':'IP 归属的网络运营商（如电信/联通/某云厂商）。',
+      '复合指纹 ID':'把多项哈希拼合并再哈希得到的 8 位短 ID，稳定标识“这台设备”，不依赖 Cookie。',
+      'Canvas 指纹':'文字/图形画到 Canvas 后取像素哈希，不同设备渲染结果不同，是稳定的匿名追踪 ID 来源。',
+      'WebGL 指纹':'读取 GPU 与驱动信息的哈希，硬件越独特越易区分。',
+      'GPU 渲染器':'WebGL 报告的显卡渲染器名称，可识别具体显卡。',
+      'GPU 厂商':'显卡厂商（Apple / Intel / NVIDIA 等）。',
+      'WebGL 版本':'WebGL 规范版本（1.0 / 2.0）。',
+      '着色器版本':'着色器语言版本（GLSL），随驱动变化。',
+      '最大纹理':'GPU 支持的最大纹理尺寸，不同硬件差异明显。',
+      '扩展数量':'WebGL 扩展个数，作为指纹补充维度。',
+      'GPU':'WebGL 报告的显卡型号，可识别具体硬件。',
+      '平台':'访客的操作系统平台。',
+      '城市':'由 IP 反查的大致城市。',
+      'IP':'访客公网 IP，属个人信息，仅站长可见。',
+      'UA':'浏览器自报的身份字符串，含系统/浏览器/版本。',
+      '访问次数':'该指纹累计访问本站的次数。',
+      '首见':'该访客第一次出现的绝对时间。',
+      '最近':'该访客最后一次出现的绝对时间。'
+    };
+    function reportVisit(fpId, ua, plat, gpu, webdriver){
       if(!WORKER) return;
       try{
-        fetch(WORKER + '/visit', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fp:fpId, ua:ua, platform:plat, gpu:gpu }) }).catch(function(){});
+        fetch(WORKER + '/visit', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fp:fpId, ua:ua, platform:plat, gpu:gpu, webdriver:!!webdriver }) }).catch(function(){});
       }catch(e){}
     }
     function loadAllVisitors(){
@@ -2310,16 +2393,28 @@
       if(!list.length){ box.innerHTML = '<span class="muted">' + (diagVisitors.length? '无匹配结果' : '暂无访客') + '</span>'; return; }
       var html = '';
       list.forEach(function(v){
-        var city = v.city ? ' · ' + v.city : '';
-        var ip = v.ip ? ' · ' + v.ip : '';
-        var gpu = (v.gpu||'').slice(0,40);
-        var ua = (v.ua||'').slice(0,72);
         var cnt = v.count||1;
-        var tag = cnt>1 ? ('回头 ×'+cnt) : '新';
-        html += '<div class="vcard'+(cnt>1?' ret':'')+'"><div class="vtop"><span class="vid">'+esc(v.fp)+'</span><span class="vtag'+(cnt>1?'':' new')+'">'+tag+'</span></div>'
-              + '<div class="vmeta"><span class="ml1">'+esc(gpu)+esc(city)+esc(ip)+'</span>'
-              + '<span class="ml2">'+esc(ua)+'</span>'
-              + '<span class="ml3">最近 '+relTime(v.last)+' · 首见 '+relTime(v.first)+'</span></div></div>';
+        var vv = verdictView(v);
+        var fp = esc(v.fp);
+        if(diagExplain){
+          html += '<div class="vcard det"><div class="vtop"><span class="vid">'+fp+'</span>'
+                + '<span class="vright"><span class="vtag '+vv.cls+'">'+vv.txt+'</span><span class="vc">×'+cnt+'</span></span></div>'
+                + '<div class="vmeta det">'
+                + vrow('GPU', esc(v.gpu||'—')) + vrow('平台', esc(v.platform||'—'))
+                + vrow('城市', esc(v.city||'—')) + vrow('IP', esc(v.ip||'—'))
+                + vrow('UA', esc(v.ua||'—')) + vrow('首见', fmt(v.first)+' · '+relTime(v.first))
+                + vrow('最近', fmt(v.last)+' · '+relTime(v.last)) + vrow('访问次数', cnt)
+                + '</div></div>';
+        } else {
+          var city = v.city ? ' · ' + v.city : '';
+          var ip = v.ip ? ' · ' + v.ip : '';
+          var gpu = v.gpu||''; var ua = v.ua||'';
+          html += '<div class="vcard"><div class="vtop"><span class="vid">'+fp+'</span>'
+                + '<span class="vright"><span class="vtag '+vv.cls+'">'+vv.txt+'</span><span class="vc">×'+cnt+'</span></span></div>'
+                + '<div class="vmeta"><span class="ml1">'+esc(gpu)+esc(city)+esc(ip)+'</span>'
+                + '<span class="ml2">'+esc(ua)+'</span>'
+                + '<span class="ml3">最近 '+relTime(v.last)+' · 首见 '+relTime(v.first)+'</span></div></div>';
+        }
       });
       box.innerHTML = html;
     }
@@ -2473,6 +2568,14 @@
       });
       var si = document.getElementById('vSearch');
       if(si) si.addEventListener('input', function(e){ diagSearch = e.target.value || ''; renderVisitors(); });
+      var ex = document.getElementById('diagExplain');
+      if(ex) ex.addEventListener('click', function(){
+        diagExplain = !diagExplain;
+        diag.classList.toggle('explain', diagExplain);
+        ex.classList.toggle('on', diagExplain);
+        ex.textContent = diagExplain ? '收起' : '说明';
+        renderVisitors();
+      });
     })();
 
     // 每次页面加载即上报当前访客（无论是否打开面板）——只有配置了后端才生效
@@ -2481,7 +2584,7 @@
       try{
         var f = computeFp();
         var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '—';
-        reportVisit(f.id, navigator.userAgent, plat, f.gpu);
+        reportVisit(f.id, navigator.userAgent, plat, f.gpu, navigator.webdriver === true);
       }catch(e){}
     })();
   }catch(e){}
