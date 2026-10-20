@@ -21,17 +21,25 @@
     audio.addEventListener('timeupdate', function(){ var n=Date.now(); if(n-last>2500){ last=n; persist(); } });
     window.addEventListener('pagehide', persist);
   } else {
-    // 其它页：用隐藏 audio 续播
+    // 其它页（无 #audio）：用隐藏 audio 同进度续播
     var s = load();
-    if (s && s.src){
-      var a = new Audio(); a.preload = 'auto'; a.src = s.src; a.volume = (typeof s.vol==='number') ? s.vol : 0.175;
-      var name = s.src.split('/').pop();
-      var vol = s.vol, t0 = s.t;
-      function persistG(){ save({ src:s.src, t:Math.floor(a.currentTime||0), vol:a.volume, playing:!a.paused, at:Date.now() }); }
+    if (s && s.src) {
+      var a = new Audio(); a.preload = 'auto'; a.src = s.src;
+      a.volume = (typeof s.vol === 'number' && s.vol >= 0) ? s.vol : 0.175;
+      var t0 = (typeof s.t === 'number' && s.t > 0) ? s.t : 0;
+      // 关键：先定位到上次进度再播放，避免“从 0 秒跳到目标位置”造成的卡顿/爆音
+      function seekableEnough(){ try { return a.seekable && a.seekable.length && a.seekable.end(0) >= t0 - 1; } catch(e){ return false; } }
+      function doSeek(){ try { if (seekableEnough()) { a.currentTime = t0; return true; } } catch(e){} return false; }
+      try { if (t0) a.currentTime = t0; } catch(e){}   // 尽早尝试定位
+      var tries = 0, started = false;
+      function startPlay(){ if (started) return; started = true; if (s.playing && a.paused) a.play().catch(function(){}); }
+      function poll(){ if (doSeek()) { startPlay(); return; } if (++tries < 80) setTimeout(poll, 80); else startPlay(); }
+      a.addEventListener('loadedmetadata', poll);
+      a.addEventListener('canplay', function(){ if (s.playing && a.paused) startPlay(); }, { once: true });
+      setTimeout(function(){ if (s.playing && a.paused) startPlay(); }, 1200);   // 兜底：避免极端情况下静音过久
+      function persistG(){ save({ src: s.src, t: Math.floor(a.currentTime || 0), vol: a.volume, playing: !a.paused, at: Date.now() }); }
       var lg = 0;
-      a.addEventListener('loadedmetadata', function(){ try{ a.currentTime = t0||0; }catch(e){} });
-      if (s.playing) { a.play().catch(function(){}); }
-      a.addEventListener('timeupdate', function(){ var n=Date.now(); if(n-lg>2500){ lg=n; persistG(); } });
+      a.addEventListener('timeupdate', function(){ var n = Date.now(); if (n - lg > 2500) { lg = n; persistG(); } });
       a.addEventListener('play', persistG);
       a.addEventListener('pause', persistG);
       window.addEventListener('pagehide', persistG);
