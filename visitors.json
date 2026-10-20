@@ -1,7 +1,7 @@
 {
   "ok": true,
   "total": 75,
-  "unique": 5,
+  "unique": 4,
   "visitors": [
     {
       "fp": "7a81898d",
@@ -13,19 +13,6 @@
       "first": 1792480590766,
       "last": 1792519683167,
       "count": 64,
-      "verdict": "human",
-      "webdriver": false
-    },
-    {
-      "fp": "3a4dd7c7",
-      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
-      "platform": "Windows",
-      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU (0x000028A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "179.253.247.204",
-      "city": "Los Angeles · US",
-      "first": 1792490235079,
-      "last": 1792490235079,
-      "count": 1,
       "verdict": "human",
       "webdriver": false
     },
@@ -63,5 +50,5 @@
       "count": 1
     }
   ],
-  "syncedAt": 1792521085080
+  "syncedAt": 1792521089965
 }
