@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "total": 24,
+  "total": 25,
   "unique": 7,
   "visitors": [
     {
@@ -11,8 +11,8 @@
       "ip": "67.159.48.148",
       "city": "Singapore · SG",
       "first": 1792480590766,
-      "last": 1792503834979,
-      "count": 16,
+      "last": 1792503953697,
+      "count": 17,
       "verdict": "human",
       "webdriver": false
     },
@@ -89,5 +89,5 @@
       "count": 1
     }
   ],
-  "syncedAt": 1792503846942
+  "syncedAt": 1792504005097
 }
