@@ -1,7 +1,7 @@
 {
   "ok": true,
   "total": 75,
-  "unique": 6,
+  "unique": 5,
   "visitors": [
     {
       "fp": "7a81898d",
@@ -13,19 +13,6 @@
       "first": 1792480590766,
       "last": 1792519683167,
       "count": 64,
-      "verdict": "human",
-      "webdriver": false
-    },
-    {
-      "fp": "dbcc28f4",
-      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
-      "platform": "Windows",
-      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1050 Ti (0x00001C82) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "2402:7500:4ce:8881:9481:b2b3:365c:4bb3",
-      "city": "Taipei · TW",
-      "first": 1792501612043,
-      "last": 1792501612043,
-      "count": 1,
       "verdict": "human",
       "webdriver": false
     },
@@ -76,5 +63,5 @@
       "count": 1
     }
   ],
-  "syncedAt": 1792521078986
+  "syncedAt": 1792521085080
 }
