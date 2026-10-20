@@ -1,12 +1,22 @@
 /* Gallery 公共交互：瀑布流首页 + 独立图页 + Lightbox + 评论区。
-   图片保护：只展示处理后的 display 图，无下载/查看原图入口；禁右键/拖拽(user-select)。 */
+   图片保护：只展示处理后的 display 图，无下载/查看原图入口；禁右键/拖拽(user-select)。
+   SPA 适配：页面类型由 #view.dataset.page 判定；通过 spa:navigate 事件重新初始化。 */
 (function () {
   'use strict';
   var $ = function (s, r) { return (r || document).querySelector(s); };
-  var isPhotoPage = document.body.classList.contains('photo-page');
   var WORKER = 'https://linsonghuu-visitors.linsonghuu.workers.dev';
   var DATA = []; var VIEW = [];
   var st = { cat: 'All', q: '', tag: '' };
+  var protectDone = false;
+  var bootedFor = null;
+  function getPage(){
+    var v = document.getElementById('view');
+    if (v && v.dataset && v.dataset.page) return v.dataset.page;
+    if (document.body.classList.contains('photo-page')) return 'photo';
+    if (document.body.classList.contains('gallery-page')) return 'gallery';
+    return '';
+  }
+  function isPhoto(){ return getPage() === 'photo'; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function relTime(ts){ if(!ts) return ''; var s=Math.floor((Date.now()-ts)/1000); if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; if(s<86400*30)return Math.floor(s/86400)+'d ago'; return new Date(ts).toLocaleDateString('zh-CN'); }
   function fp(){ try{ var f=localStorage.getItem('home-fp'); if(!f){ f=(Math.random().toString(16).slice(2,10)); localStorage.setItem('home-fp',f);} return f; }catch(e){ return 'anon'; } }
@@ -20,6 +30,7 @@
 
   // ---- 图片辅助防护：禁右键 / 禁拖拽 / 禁选中 ----
   function protect() {
+    if (protectDone) return; protectDone = true;
     document.addEventListener('contextmenu', function (e) {
       if (e.target && e.target.tagName === 'IMG') e.preventDefault();
     });
@@ -32,9 +43,11 @@
   }
 
   var LB = (function () {
-    var root, stage, img, count, title, meta, desc, cur = [], idx = 0;
+    var root = null, stage, img, count, title, meta, desc, cur = [], idx = 0, built = false;
     var scale=1, tx=0, ty=0, pointers={}, pinchStart=null, panning=false, panStart=null;
-    function build() {
+    function ensureBuilt() {
+      if (built) return;
+      built = true;
       root = document.createElement('div');
       root.className = 'lb'; root.id = 'galleryLB'; root.setAttribute('role','dialog');
       root.innerHTML =
@@ -71,7 +84,7 @@
     function onUp(e){ var moved=panStart?Math.hypot(e.clientX-panStart.x,e.clientY-panStart.y):0; var dt=panStart?Date.now()-panStart.t:0;
       delete pointers[e.pointerId]; if(pinchStart && Object.keys(pointers).length<2) pinchStart=null; panning=false;
       if(scale===1 && moved>60 && dt<500) go(e.clientX-panStart.x>0?-1:1); panStart=null; }
-    function open(list,index){ cur=list; idx=index; build(); document.body.style.overflow='hidden';
+    function open(list,index){ ensureBuilt(); cur=list; idx=index; document.body.style.overflow='hidden';
       requestAnimationFrame(function(){ root.classList.add('show'); root.setAttribute('aria-hidden','false'); }); render(); }
     function render(){ var it=cur[idx]; resetZoom(); img.src=it.display||it.thumbnail; img.alt=it.title||'';
       count.textContent=(idx+1)+' / '+cur.length; title.textContent=it.title||'';
@@ -79,12 +92,12 @@
       desc.textContent=it.description||''; desc.style.display=it.description?'':'none';
       var multi=cur.length>1; $('#lbPrev').style.display=$('#lbNext').style.display=multi?'':'none'; }
     function go(d){ if(!cur.length)return; idx=(idx+d+cur.length)%cur.length; render();
-      if(isPhotoPage) push(cur[idx]); }
+      if(isPhoto()) push(cur[idx]); }
     function share(){ var it=cur[idx]; var url=location.origin+'/gallery/'+it.id+'/';
       if(navigator.share){ navigator.share({title:(it.title||'Photo')+' · Gallery',text:it.title||'',url:url}).catch(function(){}); }
       else copy(url,'Link copied'); }
-    function toComments(){ var id=cur[idx].id; close(); if(isPhotoPage){ var el=document.getElementById('comments'); if(el) el.scrollIntoView({behavior:'smooth'}); } else { location.href='/gallery/'+id+'/#comments'; } }
-    function close(){ root.classList.remove('show'); root.setAttribute('aria-hidden','true'); document.body.style.overflow=''; img.src=''; }
+    function toComments(){ var id=cur[idx].id; close(); if(isPhoto()){ var el=document.getElementById('comments'); if(el) el.scrollIntoView({behavior:'smooth'}); } else if(window.SPA){ window.SPA.navigate('/gallery/'+id+'/#comments'); } else { location.href='/gallery/'+id+'/#comments'; } }
+    function close(){ if(!root) return; root.classList.remove('show'); root.setAttribute('aria-hidden','true'); document.body.style.overflow=''; img.src=''; }
     function copy(t,m){ if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){toast(m);}).catch(function(){fb(t);toast(m);}); else {fb(t);toast(m);} }
     function fb(t){ var ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} ta.remove(); }
     function toast(t){ var el=$('#lbToast'); if(!el){ el=document.createElement('div'); el.className='lb-toast'; el.id='lbToast'; document.body.appendChild(el);} el.textContent=t; el.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(function(){el.classList.remove('show');},1500); }
@@ -209,6 +222,7 @@
   })();
 
   function initPhoto() {
+    if (window.PHOTO && window.PHOTO.id) document.body.dataset.photoId = window.PHOTO.id;
     var list = DATA;
     var img = $('#photoImg');
     function res(x){ return x.width ? (x.width + ' × ' + x.height) : ''; }
@@ -237,10 +251,25 @@
   }
 
   function boot() {
+    var key = location.pathname + location.search;
+    if (bootedFor === key) return;
+    bootedFor = key;
+    var p = getPage();
+    if (p !== 'gallery' && p !== 'photo') return; // 仅 gallery / 照片页需要初始化
     load().then(function () {
       protect();
-      if (isPhotoPage) initPhoto(); else initIndex();
+      if (p === 'photo') initPhoto(); else initIndex();
     });
   }
+
+  // 直接加载（整页进入 gallery / 照片页）
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
+
+  // SPA 软导航进入 gallery / 照片页时重新初始化
+  window.addEventListener('spa:navigate', function (e) {
+    var p = e.detail && e.detail.page;
+    if (p === 'gallery' || p === 'photo') boot();
+  });
+
+  window.Gallery = { boot: boot, LB: LB, Cmt: Cmt, getPage: getPage };
 })();
