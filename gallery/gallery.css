@@ -2,14 +2,14 @@
 :root{
   --bg:#000000; --cell:#080808; --ink:#F5F5F5; --line:#242424;
   --r-card:26px; --r-mid:14px; --r-sm:9px;
-  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
-  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","Segoe UI Variable Text","Segoe UI","PingFang SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+  --sans:"Inter","Noto Sans SC",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--bg)}
 body{
   min-height:100dvh;background:var(--bg);color:var(--ink);
-  font-family:var(--sans);font-size:14px;letter-spacing:.012em;
+  font-family:var(--sans);font-size:15px;letter-spacing:.012em;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
 }
 
