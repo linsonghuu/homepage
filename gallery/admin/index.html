@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex,nofollow">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<title>评论管理 · linsong</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/gallery/gallery.css">
+</head>
+<body class="admin-page">
+  <header class="gbar">
+    <a class="gback" href="/gallery/">&larr; <span>Gallery</span></a>
+    <span class="gbrand">评论管理</span>
+  </header>
+  <div class="gwrap" style="padding-bottom:60px">
+    <div class="admin-login" id="adminLogin">
+      <div style="font-size:15px;font-weight:600;margin-bottom:2px">评论管理</div>
+      <input id="tokInput" type="password" placeholder="Admin token" autocomplete="off">
+      <button id="loginBtn">进入</button>
+      <span class="c-msg" id="loginMsg"></span>
+    </div>
+    <div id="adminPanel" hidden>
+      <div class="a-tabs" id="aTabs">
+        <button class="a-tab on" data-f="all">全部</button>
+        <button class="a-tab" data-f="pending">待审核 <span id="nPending">0</span></button>
+        <button class="a-tab" data-f="hidden">已隐藏</button>
+      </div>
+      <div class="a-note">正常评论即时公开；仅疑似垃圾进入「待审核」。点击图片 ID 进入对应图片。</div>
+      <div class="a-list" id="aList"></div>
+      <div class="a-empty" id="aEmpty" hidden>没有评论</div>
+    </div>
+  </div>
+  <script>window.WORKER='https://linsonghuu-visitors.linsonghuu.workers.dev';</script>
+  <script src="/gallery/admin.js" defer></script>
+</body>
+</html>
