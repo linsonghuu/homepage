@@ -1518,9 +1518,13 @@
   }
 
   function preloadRest(){
-    PLAYLIST.forEach((t, i) => {
-      if (i !== cur && !preloaded[i]) prefetchQueue.push(i);
-    });
+    // 省流量：只预取“下一首”，不预取整个播放列表； weaker network / 省流量模式干脆不预取
+    var conn = navigator.connection || {};
+    var saveData = conn.saveData || /(^|-)2g/.test(conn.effectiveType || '');
+    if (!saveData){
+      var next = (cur + 1) % PLAYLIST.length;
+      if (next !== cur && !preloaded[next]) prefetchQueue.push(next);
+    }
     if (!prefetching) prefetchNext();
   }
 
