@@ -155,6 +155,9 @@ body{
 
 /* ── 独立图片页 ── */
 .photo-page{display:flex;flex-direction:column;min-height:100dvh}
+/* SPA 下 body 与 .photo 之间多了一层 #view，flex 链要接到 #view 上 */
+#view{display:block}
+#view[data-page="photo"]{display:flex;flex-direction:column;min-height:100dvh}
 .photo{
   flex:1;display:grid;grid-template-columns:1fr 320px;gap:clamp(18px,3vw,36px);
   max-width:1120px;margin:0 auto;width:100%;
