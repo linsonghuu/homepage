@@ -215,6 +215,7 @@
   .links  {grid-area:links}
   .weather{grid-area:weather}
   .birthday{grid-area:birthday}
+  .explore{grid-area:explore}
 
   .bento{
     display:grid;
@@ -222,7 +223,8 @@
     grid-template-areas:
       "profile about about"
       "time    links weather"
-      "birthday birthday birthday";
+      "birthday birthday birthday"
+      "explore  explore explore";
     gap:11px;
   }
 
@@ -468,6 +470,55 @@
     font-variant-numeric:tabular-nums;
     line-height:1;
   }
+
+  /* ── 个人时钟：按时段切换 背景 / 星点 / 图标小动画（纯黑白灰）── */
+  .cell.time{overflow:hidden}
+  .tod-bg{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .9s ease}
+  .cell.time.td-night .tod-bg{background:radial-gradient(120% 85% at 50% -12%, rgba(255,255,255,.07), transparent 60%);opacity:1}
+  .cell.time.td-dawn  .tod-bg{background:radial-gradient(95% 70% at 50% 118%, rgba(255,255,255,.17), transparent 62%);opacity:1}
+  .cell.time.td-noon  .tod-bg{background:radial-gradient(120% 85% at 82% 6%, rgba(255,255,255,.11), transparent 56%);opacity:1}
+  .cell.time.td-dusk  .tod-bg{background:linear-gradient(180deg, rgba(0,0,0,.62) 0%, rgba(255,255,255,.05) 100%);opacity:1}
+  .tod-stars{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;opacity:0;transition:opacity .9s ease}
+  .tod-stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;opacity:.35;animation:todTwinkle 3s ease-in-out infinite}
+  .tod-stars i:nth-child(1){left:14%;top:20%;animation-delay:0s}
+  .tod-stars i:nth-child(2){left:26%;top:58%;animation-delay:.7s;width:1.5px;height:1.5px}
+  .tod-stars i:nth-child(3){left:40%;top:14%;animation-delay:1.3s}
+  .tod-stars i:nth-child(4){left:66%;top:30%;animation-delay:.4s;width:1.5px;height:1.5px}
+  .tod-stars i:nth-child(5){left:78%;top:20%;animation-delay:1.7s}
+  .tod-stars i:nth-child(6){left:88%;top:62%;animation-delay:2.1s;width:1.5px;height:1.5px}
+  .cell.time.td-night .tod-stars,.cell.time.td-dusk .tod-stars{opacity:1}
+  .cell.time.td-dusk .tod-stars i:nth-child(n+4){display:none}
+  @keyframes todTwinkle{0%,100%{opacity:.12;transform:scale(.7)}50%{opacity:.85;transform:scale(1)}}
+  .tod-line{display:inline-flex;align-items:center;gap:7px}
+  .tod-glyph{display:inline-flex;width:16px;height:16px;color:#f5f5f5}
+  .tod-glyph svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .cell.time.td-dawn  .tod-glyph svg{animation:todRise 3.6s ease-in-out infinite}
+  .cell.time.td-noon  .tod-glyph svg{animation:todPulse 3.2s ease-in-out infinite}
+  .cell.time.td-night .tod-glyph svg{animation:todFloat 5s ease-in-out infinite}
+  .cell.time.td-dusk  .tod-glyph svg{animation:todFloat 6s ease-in-out infinite}
+  @keyframes todRise{0%,100%{transform:translateY(3px);opacity:.7}50%{transform:translateY(-1px);opacity:1}}
+  @keyframes todPulse{0%,100%{opacity:.85}50%{opacity:1;filter:drop-shadow(0 0 4px rgba(255,255,255,.32))}}
+  @keyframes todFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  .tod-greet{font-size:12px;font-weight:500;letter-spacing:.01em;opacity:.82}
+  @media (prefers-reduced-motion:reduce){
+    .tod-stars i,.cell.time.td-dawn .tod-glyph svg,.cell.time.td-noon .tod-glyph svg,.cell.time.td-night .tod-glyph svg,.cell.time.td-dusk .tod-glyph svg{animation:none}
+  }
+
+  /* ── 网站探索度卡片（进度环 + 里程碑）── */
+  .explore{flex-direction:row;align-items:center;justify-content:flex-start;gap:18px;text-align:left;padding:16px 20px}
+  .ex-ring{position:relative;width:54px;height:54px;flex:none}
+  .ex-ring svg{width:54px;height:54px;display:block}
+  .ex-ring .ex-rb{fill:none;stroke:rgba(255,255,255,.12);stroke-width:3.4}
+  .ex-ring .ex-rf{fill:none;stroke:#ededed;stroke-width:3.4;stroke-linecap:round;stroke-dasharray:119.4;stroke-dashoffset:119.4;transform:rotate(-90deg);transform-origin:22px 22px;transition:stroke-dashoffset .7s cubic-bezier(.16,1,.3,1)}
+  .ex-pct{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:600;color:#f5f5f5}
+  .ex-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
+  .ex-head .h{justify-content:flex-start;opacity:.6}
+  .ex-sub{font-family:var(--mono);font-size:10px;opacity:.45;letter-spacing:.04em}
+  .ex-list{display:flex;flex-wrap:wrap;gap:6px}
+  .ex-chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;line-height:1.5;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.12);color:#d8d8d8;opacity:.45}
+  .ex-chip .ck{font-family:var(--mono);font-size:11px}
+  .ex-chip.done{opacity:.92;border-color:rgba(255,255,255,.28);color:#f5f5f5}
+  @media (max-width:760px){ .explore{padding:15px 16px} }
 
   .weather{gap:9px}
   .wtemp{
@@ -910,7 +961,7 @@
     .bento{
       grid-template-columns:1fr;
       grid-template-areas:
-        "profile" "about" "time" "links" "weather" "birthday";
+        "profile" "about" "time" "links" "weather" "birthday" "explore";
       gap:9px;
     }
     .cell{border-radius:22px;padding:18px 15px}
@@ -1087,10 +1138,16 @@
         <div class="bd-bar"><i id="bdFill"></i></div>
       </div>
 
-      <div class="cell time reveal">
+      <div class="cell time reveal" id="timeCard">
+        <span class="tod-bg" aria-hidden="true"></span>
+        <span class="tod-stars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>
         <div class="h">
           <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg>
           Local Time
+        </div>
+        <div class="tod-line">
+          <span class="tod-glyph" id="todGlyph" aria-hidden="true"></span>
+          <span class="tod-greet" id="todGreet">—</span>
         </div>
         <div class="date" id="date">—</div>
         <div class="clock" id="clock">00:00:00</div>
@@ -1115,6 +1172,26 @@
           </button>
         </div>
         <div class="copy-hint">click to copy</div>
+      </div>
+
+      <div class="cell explore reveal" id="exploreCard">
+        <div class="ex-ring">
+          <svg viewBox="0 0 44 44" aria-hidden="true">
+            <circle class="ex-rb" cx="22" cy="22" r="19"></circle>
+            <circle class="ex-rf" id="exArc" cx="22" cy="22" r="19"></circle>
+          </svg>
+          <span class="ex-pct" id="exPct">0%</span>
+        </div>
+        <div class="ex-body">
+          <div class="ex-head">
+            <div class="h">
+              <svg viewBox="0 0 24 24"><path d="M12 3 4 6.5v5c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5v-5L12 3z"/><path d="m9 12 2 2 4-4"/></svg>
+              探索度
+            </div>
+            <div class="ex-sub" id="exSub">已发现 0 / 8 · 逛一逛解锁更多</div>
+          </div>
+          <div class="ex-list" id="exList"></div>
+        </div>
       </div>
 
     </main>
@@ -1209,11 +1286,37 @@
     const clockEl = document.getElementById('clock');
   const dateEl  = document.getElementById('date');
   const week = '日一二三四五六';
+  // 个人时钟 · 时段（凌晨/早晨/下午/晚上）：文案 + 单色背景 + 小动画
+  const timeCard = document.getElementById('timeCard');
+  const todGlyph = document.getElementById('todGlyph');
+  const todGreet = document.getElementById('todGreet');
+  const TOD_SVG = {
+    moon:    '<svg viewBox="0 0 24 24"><path d="M20.5 14.5A8.6 8.6 0 0 1 9.5 3.5 7.2 7.2 0 1 0 20.5 14.5z"/></svg>',
+    sunrise: '<svg viewBox="0 0 24 24"><path d="M12 3v2.4M5.6 6.6 7 8M18.4 6.6 17 8M3 16.5h1.6M19.4 16.5H21"/><path d="M8.3 16.5a3.7 3.7 0 0 1 7.4 0"/><path d="M3 20.4h18"/></svg>',
+    sun:     '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M18.4 5.6 17 7M7 17l-1.4 1.4"/></svg>'
+  };
+  function todSegment(h){
+    if (h < 6)  return { cls:'td-night', svg:TOD_SVG.moon,    greet:'夜深了 · 还没睡吗' };
+    if (h < 11) return { cls:'td-dawn',  svg:TOD_SVG.sunrise, greet:'早安 · 又是新的一天' };
+    if (h < 18) return { cls:'td-noon',  svg:TOD_SVG.sun,     greet:'下午好 · 慢慢来' };
+    return               { cls:'td-dusk',  svg:TOD_SVG.moon,    greet:'晚上好 · 早点休息' };
+  }
+  let todCls = '';
+  function applyTod(h){
+    const seg = todSegment(h);
+    if (!timeCard || seg.cls === todCls) return;
+    todCls = seg.cls;
+    timeCard.classList.remove('td-night','td-dawn','td-noon','td-dusk');
+    timeCard.classList.add(seg.cls);
+    if (todGlyph) todGlyph.innerHTML = seg.svg;
+    if (todGreet) todGreet.textContent = seg.greet;
+  }
   function tick(){
     const d = new Date();
     const p = n => String(n).padStart(2,'0');
     clockEl.textContent = p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
     dateEl.textContent = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日 · 星期' + week[d.getDay()];
+    applyTod(d.getHours());
   }
   tick();
   setInterval(tick, 1000);
@@ -1243,6 +1346,52 @@
   }
   bdayTick();
   setInterval(bdayTick, 3600000);
+
+  // ── 网站探索度：记录访客互动进度（localStorage 持久，跨访问累计）──
+  (function(){
+    var KEY = 'home-explore', VISIT = 'home-visited';
+    var LIST = [
+      { id:'music',     label:'听过音乐',    hint:'放首歌听' },
+      { id:'avatar',    label:'逗了雌小鬼',  hint:'点一下头像' },
+      { id:'diag',      label:'摸到隐藏面板', hint:'试着键 diag' },
+      { id:'links',     label:'存下联系方式', hint:'复制邮箱' },
+      { id:'weather',   label:'施了个天气',  hint:'右下角天气' },
+      { id:'guestbook', label:'翻开留言板',  hint:'拉下留言板' },
+      { id:'bottom',    label:'逛到页底',    hint:'滑到最底' },
+      { id:'return',    label:'二度回来',    hint:'再来一次' }
+    ];
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY) || '{}'); }catch(e){ return {}; } }
+    function save(g){ try{ localStorage.setItem(KEY, JSON.stringify(g)); }catch(e){} }
+    var got = load();
+    var C = 2 * Math.PI * 19;   // 进度环周长 r=19
+    function render(){
+      var done = 0; LIST.forEach(function(m){ if (got[m.id]) done++; });
+      var arc = document.getElementById('exArc');
+      var pctEl = document.getElementById('exPct');
+      var subEl = document.getElementById('exSub');
+      var listEl = document.getElementById('exList');
+      if (arc)  arc.style.strokeDashoffset = (C * (1 - done / LIST.length)).toFixed(2);
+      if (pctEl) pctEl.textContent = Math.round(done / LIST.length * 100) + '%';
+      if (subEl) subEl.textContent = '已发现 ' + done + ' / ' + LIST.length + (done === LIST.length ? ' · 全解锁！' : ' · 逛一逛解锁更多');
+      if (listEl){
+        var html = '';
+        LIST.forEach(function(m){
+          html += got[m.id]
+            ? '<span class="ex-chip done"><span class="ck">✓</span>' + m.label + '</span>'
+            : '<span class="ex-chip"><span class="ck">?</span>' + m.hint + '</span>';
+        });
+        listEl.innerHTML = html;
+      }
+    }
+    function unlock(id){ if (!id || got[id]) return; got[id] = true; save(got); render(); }
+    window.exploreHit = unlock;   // 供各交互入口调用（含其它 <script> 块）
+    try { if (localStorage.getItem(VISIT)) unlock('return'); localStorage.setItem(VISIT, '1'); } catch(e){}
+    function onScroll(){
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 6) unlock('bottom');
+    }
+    window.addEventListener('scroll', onScroll, { passive:true });
+    render();
+  })();
 
   const audio     = document.getElementById('audio');
   const pbtn      = document.getElementById('pbtn');
@@ -1500,6 +1649,7 @@
 
   function togglePlay(){
     if (audio.paused){
+      if (window.exploreHit) window.exploreHit('music');
       audio.play().catch(() => {});
     } else {
       audio.pause();
@@ -1797,6 +1947,7 @@
     e.stopPropagation();
     startWeatherFX(b.dataset.w);
     markFxBtn(b.dataset.w);
+    if (window.exploreHit) window.exploreHit('weather');
   });
 
   document.addEventListener('visibilitychange', () => {
@@ -1977,6 +2128,7 @@
     gbToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     updateGbNote();
     if (open){
+      if (window.exploreHit) window.exploreHit('guestbook');
       ensureGiscus();
       setTimeout(() => gb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 280);
     }
@@ -1985,6 +2137,7 @@
   document.querySelectorAll('button.ic').forEach(btn => {
     btn.addEventListener('click', async () => {
       const text = btn.dataset.val;
+      if (window.exploreHit) window.exploreHit('links');
       try{
         await navigator.clipboard.writeText(text);
       }catch(e){
@@ -2002,6 +2155,10 @@
         btn.dataset.tip = oldTip;
       }, 1200);
     });
+  });
+
+  document.querySelectorAll('a.ic').forEach(a => {
+    a.addEventListener('click', () => { if (window.exploreHit) window.exploreHit('links'); });
   });
 
   const eqEl = document.getElementById('eq');
@@ -2144,6 +2301,7 @@
   let quipTimer = null;
 
   function sayQuip(){
+    if (window.exploreHit) window.exploreHit('avatar');
     let i = lastQuip;
     while (QUIPS.length > 1 && i === lastQuip){
       i = Math.floor(Math.random() * QUIPS.length);
@@ -2553,7 +2711,7 @@
       })(0);
     }
 
-    function openDiag(){ collect(); diag.classList.add('show'); diag.setAttribute('aria-hidden','false'); }
+    function openDiag(){ if (window.exploreHit) window.exploreHit('diag'); collect(); diag.classList.add('show'); diag.setAttribute('aria-hidden','false'); }
     function closeDiag(){ diag.classList.remove('show'); diag.setAttribute('aria-hidden','true'); }
     function toggleDiag(){ diag.classList.contains('show') ? closeDiag() : openDiag(); }
 
