@@ -22,9 +22,9 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
 
@@ -33,11 +33,10 @@
     --cell:#080808;
     --ink:#F5F5F5;
     --line:#242424;
-    --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,"Liberation Mono",monospace;
 
-    --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",
-           "Segoe UI Variable Text","Segoe UI Variable Display","Segoe UI",
-           "PingFang SC","Noto Sans SC","Microsoft YaHei",system-ui,sans-serif;
+    --sans:"Inter","Noto Sans SC",-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",
+           "Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
     --r-card:26px;
     --r-mid:14px;
     --r-sm:9px;
@@ -49,7 +48,7 @@
     background:var(--bg);
     color:var(--ink);
     font-family:var(--sans);
-    font-size:14px;
+    font-size:15px;
     letter-spacing:.012em;
     -webkit-font-smoothing:antialiased;
     -moz-osx-font-smoothing:grayscale;
@@ -539,35 +538,38 @@
     min-height:11px;
   }
 
-  .birthday{gap:12px}
-  .bd-main{display:flex;justify-content:center}
+  .birthday{gap:16px;padding:20px 18px}
   .bd-note{
     font-family:var(--mono);
-    font-size:clamp(16px,2.2vw,19px);
+    font-size:clamp(19px,2.5vw,23px);
     font-weight:600;
-    letter-spacing:.02em;
-    opacity:.9;
+    letter-spacing:0;
+    opacity:.95;
     white-space:nowrap;
   }
-  .bd-note b{font-size:1.2em;font-weight:700;color:#f5f5f5}
-  .bd-bar{
-    width:100%;
-    height:3px;
-    border-radius:99px;
-    background:rgba(255,255,255,.07);
-    overflow:hidden;
+  .bd-note b{font-size:1.15em;font-weight:700;color:#f5f5f5}
+  .bd-track{display:flex;align-items:center;gap:12px;width:100%}
+  .bd-fill-wrap{
+    flex:1;min-width:0;height:3px;border-radius:99px;
+    background:rgba(255,255,255,.08);overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.02);
   }
-  .bd-bar i{
+  .bd-fill-wrap i{
     display:block;height:100%;width:0;
     border-radius:99px;
-    background:linear-gradient(90deg, rgba(255,255,255,.25), rgba(255,255,255,.72));
-    transition:width 1s cubic-bezier(.22,1,.36,1);
+    background:linear-gradient(90deg, rgba(255,255,255,.32), rgba(255,255,255,.85));
+    transition:width 1.1s cubic-bezier(.22,1,.36,1);
+  }
+  .bd-pct{
+    flex:none;min-width:46px;text-align:right;
+    font-family:var(--mono);font-size:11px;opacity:.5;font-variant-numeric:tabular-nums;
   }
   body.birthday-today .cell.birthday{
     border-color:rgba(255,255,255,.22);
     background:linear-gradient(158deg, rgba(255,255,255,.10) 0%, rgba(255,255,255,.045) 60%, rgba(255,255,255,.02) 100%);
   }
   body.birthday-today .bd-note{opacity:.9;color:#fff}
+  body.birthday-today .bd-pct{opacity:.75;color:#fff}
 
   .views{
     margin-top:6px;
@@ -1020,6 +1022,21 @@
   .diag .vsearch{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11px;padding:7px 11px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;outline:none}
   .diag .snap{font-family:var(--mono);font-size:9.5px;opacity:.5;margin:0 0 8px;letter-spacing:.02em}
   .diag .snap.warn{opacity:.8;color:rgba(255,200,120,.92)}
+  .diag .vadmin{margin:0 0 12px;display:flex;flex-direction:column;gap:8px;padding:11px 12px;border:1px dashed rgba(255,255,255,.14);border-radius:10px}
+  .diag .va-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .diag .va-l{font-family:var(--mono);font-size:10px;opacity:.5;flex:none;min-width:52px}
+  .diag .va-row input{flex:1;min-width:80px;font-family:var(--mono);font-size:11px;padding:6px 9px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;outline:none}
+  .diag .va-row input:focus{border-color:rgba(255,255,255,.3)}
+  .diag .va-arrow{opacity:.4;flex:none}
+  .diag .va-row button{font-family:var(--mono);font-size:10.5px;padding:6px 12px;border-radius:16px;cursor:pointer;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#eaeaea;flex:none}
+  .diag .va-row button:hover{background:rgba(255,255,255,.14)}
+  .diag .va-hint{font-family:var(--mono);font-size:9px;opacity:.3;flex:none}
+  .diag .va-msg{font-family:var(--mono);font-size:9.5px;opacity:.65;flex:1;min-width:120px;color:rgba(255,214,138,.92)}
+  .diag .vadmrow{display:flex;gap:7px;margin-top:7px;align-items:center}
+  .diag .vnote{flex:1;min-width:0;font-family:var(--sans);font-size:11px;padding:5px 9px;border:1px solid rgba(255,255,255,.13);border-radius:8px;background:rgba(255,255,255,.03);color:#f0f0f0;outline:none}
+  .diag .vnote:focus{border-color:rgba(255,255,255,.28)}
+  .diag .vmg{font-family:var(--mono);font-size:10px;padding:5px 9px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.13);background:transparent;color:#c9c9c9;flex:none}
+  .diag .vmg:hover{background:rgba(255,255,255,.1);color:#fff}
   .diag .vsearch::placeholder{opacity:.35}
   .diag .vsearch:focus{border-color:rgba(255,255,255,.3)}
   .diag .vlist{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent;padding-right:2px;margin-top:2px}
@@ -1117,10 +1134,11 @@
           <svg viewBox="0 0 24 24"><path d="M12 3.2c.9 1 1.4 2 1.4 3a1.9 1.9 0 1 1-3.8 0c0-1 .5-2 1.4-3z"/><path d="M5 11.5h14l-1.2 8.2a1.6 1.6 0 0 1-1.6 1.3H7.8a1.6 1.6 0 0 1-1.6-1.3Z"/><path d="M5 15.5h14"/></svg>
           Birthday
         </div>
-        <div class="bd-main">
-          <div class="bd-note" id="bdNote">—</div>
+        <div class="bd-note" id="bdNote">—</div>
+        <div class="bd-track">
+          <span class="bd-fill-wrap"><i id="bdFill"></i></span>
+          <span class="bd-pct" id="bdPct">0%</span>
         </div>
-        <div class="bd-bar"><i id="bdFill"></i></div>
       </div>
 
       <div class="cell time reveal" id="timeCard">
@@ -1301,6 +1319,7 @@
 
     const note = document.getElementById('bdNote');
     const fill = document.getElementById('bdFill');
+    const pct = document.getElementById('bdPct');
     if (isToday){
       note.innerHTML = '生日快乐 · <b>就是今天</b>';
       document.body.classList.add('birthday-today');
@@ -1308,6 +1327,7 @@
       note.innerHTML = '还有 <b>' + daysLeft + '</b> 天';
     }
     fill.style.width = (progress * 100).toFixed(1) + '%';
+    if (pct) pct.textContent = (progress * 100).toFixed(1) + '%';
   }
   bdayTick();
   setInterval(bdayTick, 3600000);
@@ -1533,6 +1553,14 @@
   function enterSite(){
     if (entered) return;
     entered = true;
+    try { sessionStorage.setItem('home-entered','1'); } catch(err){}
+
+    // 续播：按上次的曲目恢复（从图片集等返回时不重新开始）
+    var r = window.__musicResume;
+    if (r && r.src){
+      var base = r.src.split('/').pop();
+      for (var k=0;k<PLAYLIST.length;k++){ if (PLAYLIST[k].src === base){ cur = k; break; } }
+    }
 
     document.body.classList.add('entered');
     gate.classList.add('gone');
@@ -1540,19 +1568,29 @@
     pickInitial();
     kickAudio();
 
+    // 恢复播放进度与状态
+    if (r && typeof r.t === 'number'){
+      var seek = function(){ audio.currentTime = r.t; audio.removeEventListener('loadedmetadata', seek); };
+      if (audio.readyState >= 1) audio.currentTime = r.t; else audio.addEventListener('loadedmetadata', seek);
+    }
+
     if (window.requestIdleCallback) requestIdleCallback(() => { try { ensureGiscus(); } catch(err){} }, { timeout: 6000 });
     else setTimeout(() => { try { ensureGiscus(); } catch(err){} }, 4500);
 
-    audio.play().catch(() => {
-      playerbar.classList.add('blocked');
-      document.body.classList.add('need-tap');
-    });
+    if (!r || r.playing !== false){
+      audio.play().catch(() => {
+        playerbar.classList.add('blocked');
+        document.body.classList.add('need-tap');
+      });
+    }
   }
 
   gate.addEventListener('click', enterSite);
   gate.addEventListener('keydown', e => {
     if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); enterSite(); }
   });
+  // 从图片集/子页返回主页：同标签页内已进入过 → 跳过入口门直接进主页
+  try { if (sessionStorage.getItem('home-entered')==='1') enterSite(); } catch(err){}
 
   function totalTime(){
     const d = audio.duration;
@@ -2274,6 +2312,10 @@
           <input class="vsearch" id="vSearch" type="text" placeholder="搜索：指纹 / GPU / 城市 / IP / UA…" autocomplete="off">
         </div>
         <div class="snap" id="vSnap"></div>
+        <div class="vadmin" id="vAdmin">
+          <div class="va-row"><span class="va-l">站长令牌</span><input id="vaTok" type="password" placeholder="填 ADMIN_TOKEN 解锁备注/合并" autocomplete="off"><span class="va-hint">仅存本机，普通访客无此面板</span></div>
+          <div class="va-row"><span class="va-l">合并访客</span><input id="vaFrom" placeholder="来源指纹" autocomplete="off"><span class="va-arrow">→</span><input id="vaInto" placeholder="目标指纹" autocomplete="off"><button id="vaMerge">合并</button><span class="va-msg" id="vaMsg"></span></div>
+        </div>
         <div class="vlist" id="vList"><span class="muted">未配置后端或尚未加载</span></div>
       </div>
     </div>
@@ -2509,7 +2551,7 @@
                 + vrow('城市', esc(v.city||'—')) + vrow('IP', esc(v.ip||'—'))
                 + vrow('UA', esc(v.ua||'—')) + vrow('首见', fmt(v.first)+' · '+relTime(v.first))
                 + vrow('最近', fmt(v.last)+' · '+relTime(v.last)) + vrow('访问次数', cnt)
-                + '</div></div>';
+                + '</div>' + (getGA() ? vadmrow(v.fp, v.note) : '') + '</div>';
         } else {
           var city = v.city ? ' · ' + v.city : '';
           var ip = v.ip ? ' · ' + v.ip : '';
@@ -2518,11 +2560,50 @@
                 + '<span class="vright"><span class="vtag '+vv.cls+'">'+vv.txt+'</span><span class="vc">×'+cnt+'</span></span></div>'
                 + '<div class="vmeta"><span class="ml1">'+esc(gpu)+esc(city)+esc(ip)+'</span>'
                 + '<span class="ml2">'+esc(ua)+'</span>'
-                + '<span class="ml3">最近 '+relTime(v.last)+' · 首见 '+relTime(v.first)+'</span></div></div>';
+                + '<span class="ml3">最近 '+relTime(v.last)+' · 首见 '+relTime(v.first)+'</span></div>' + (getGA() ? vadmrow(v.fp, v.note) : '') + '</div>';
         }
       });
       box.innerHTML = html;
     }
+
+    /* ── 站长：访客备注 + 合并（仅在本机存了 ADMIN_TOKEN 时显示）── */
+    function getGA(){ try{ return localStorage.getItem('gadmin-token') || ''; }catch(e){ return ''; } }
+    function vadmrow(fp, note){
+      return '<div class="vadmrow"><input class="vnote" data-fp="'+esc(fp)+'" value="'+esc(note||'')+'" placeholder="备注（如昵称/身份）…" maxlength="120">'
+           + '<button class="vmg" data-fp="'+esc(fp)+'" title="作为合并来源">并入→</button></div>';
+    }
+    function saveNote(fp, note){
+      var tok = getGA(); if(!tok) return;
+      fetch(WORKER + '/admin/note?token=' + encodeURIComponent(tok), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ fp:fp, note:note }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){ if(d && d.ok){ diagVisitors.forEach(function(v){ if(v.fp===fp) v.note = note.trim(); }); setSnap('备注已保存 · '+fp); } else setSnap('备注保存失败'); })
+        .catch(function(){ setSnap('备注保存失败'); });
+    }
+    function doMerge(){
+      var tok = getGA(); if(!tok){ setSnap('先填写站长令牌'); return; }
+      var from = (document.getElementById('vaFrom')||{}).value || ''; from = from.trim();
+      var into = (document.getElementById('vaInto')||{}).value || ''; into = into.trim();
+      var msg = document.getElementById('vaMsg');
+      if(!from || !into || from===into){ if(msg) msg.textContent='请填两个不同的指纹'; return; }
+      if(msg) msg.textContent='合并中…';
+      fetch(WORKER + '/admin/merge?token=' + encodeURIComponent(tok), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from:from, into:into }) })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if(d && d.ok){ if(msg) msg.textContent='已合并，累计 '+(d.mergedCount||0)+' 次'; loadAllVisitors(); }
+          else if(d && d.err==='note_conflict'){ if(msg) msg.textContent='备注冲突：【'+d.notes[0]+'】|【'+d.notes[1]+'】—— 请把来源备注改成与目标一致后重试'; }
+          else { if(msg) msg.textContent='失败：'+(d && d.err || '网络'); }
+        })
+        .catch(function(){ if(msg) msg.textContent='网络错误'; });
+    }
+    (function wireAdmin(){
+      var g = document.getElementById('gAll'); if(!g) return;
+      var tok = document.getElementById('vaTok'); if(tok && getGA()) tok.value = getGA();
+      if(tok) tok.addEventListener('change', function(){ try{ localStorage.setItem('gadmin-token', tok.value.trim()); }catch(e){} renderVisitors(); });
+      g.addEventListener('click', function(e){ var mg=e.target.closest('.vmg'); if(!mg) return; var f=mg.getAttribute('data-fp'); var from=document.getElementById('vaFrom'); if(from){ from.value=f; from.focus(); } });
+      g.addEventListener('change', function(e){ if(e.target.classList && e.target.classList.contains('vnote')) saveNote(e.target.getAttribute('data-fp'), e.target.value); });
+      g.addEventListener('keydown', function(e){ if(e.target.classList && e.target.classList.contains('vnote') && e.key==='Enter'){ e.preventDefault(); saveNote(e.target.getAttribute('data-fp'), e.target.value); e.target.blur(); } });
+      var mb = document.getElementById('vaMerge'); if(mb) mb.addEventListener('click', doMerge);
+    })();
 
     function collect(){
       var gi=document.getElementById('gIdentity');
@@ -2702,5 +2783,6 @@
   }catch(e){}
 })();
 </script>
+<script src="/player-bridge.js"></script>
 </body>
 </html>
