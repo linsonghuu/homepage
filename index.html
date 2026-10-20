@@ -215,7 +215,6 @@
   .links  {grid-area:links}
   .weather{grid-area:weather}
   .birthday{grid-area:birthday}
-  .explore{grid-area:explore}
 
   .bento{
     display:grid;
@@ -223,8 +222,7 @@
     grid-template-areas:
       "profile about about"
       "time    links weather"
-      "birthday birthday birthday"
-      "explore  explore explore";
+      "birthday birthday birthday";
     gap:11px;
   }
 
@@ -503,22 +501,6 @@
   @media (prefers-reduced-motion:reduce){
     .tod-stars i,.cell.time.td-dawn .tod-glyph svg,.cell.time.td-noon .tod-glyph svg,.cell.time.td-night .tod-glyph svg,.cell.time.td-dusk .tod-glyph svg{animation:none}
   }
-
-  /* ── 网站探索度卡片（进度环 + 里程碑）── */
-  .explore{flex-direction:row;align-items:center;justify-content:flex-start;gap:18px;text-align:left;padding:16px 20px}
-  .ex-ring{position:relative;width:54px;height:54px;flex:none}
-  .ex-ring svg{width:54px;height:54px;display:block}
-  .ex-ring .ex-rb{fill:none;stroke:rgba(255,255,255,.12);stroke-width:3.4}
-  .ex-ring .ex-rf{fill:none;stroke:#ededed;stroke-width:3.4;stroke-linecap:round;stroke-dasharray:119.4;stroke-dashoffset:119.4;transform:rotate(-90deg);transform-origin:22px 22px;transition:stroke-dashoffset .7s cubic-bezier(.16,1,.3,1)}
-  .ex-pct{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:12px;font-weight:600;color:#f5f5f5}
-  .ex-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
-  .ex-head .h{justify-content:flex-start;opacity:.6}
-  .ex-sub{font-family:var(--mono);font-size:10px;opacity:.45;letter-spacing:.04em}
-  .ex-list{display:flex;flex-wrap:wrap;gap:6px}
-  .ex-chip{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;line-height:1.5;padding:4px 10px;border-radius:20px;border:1px solid rgba(255,255,255,.12);color:#d8d8d8;opacity:.45}
-  .ex-chip .ck{font-family:var(--mono);font-size:11px}
-  .ex-chip.done{opacity:.92;border-color:rgba(255,255,255,.28);color:#f5f5f5}
-  @media (max-width:760px){ .explore{padding:15px 16px} }
 
   .weather{gap:9px}
   .wtemp{
@@ -961,7 +943,7 @@
     .bento{
       grid-template-columns:1fr;
       grid-template-areas:
-        "profile" "about" "time" "links" "weather" "birthday" "explore";
+        "profile" "about" "time" "links" "weather" "birthday";
       gap:9px;
     }
     .cell{border-radius:22px;padding:18px 15px}
@@ -1174,26 +1156,6 @@
         <div class="copy-hint">click to copy</div>
       </div>
 
-      <div class="cell explore reveal" id="exploreCard">
-        <div class="ex-ring">
-          <svg viewBox="0 0 44 44" aria-hidden="true">
-            <circle class="ex-rb" cx="22" cy="22" r="19"></circle>
-            <circle class="ex-rf" id="exArc" cx="22" cy="22" r="19"></circle>
-          </svg>
-          <span class="ex-pct" id="exPct">0%</span>
-        </div>
-        <div class="ex-body">
-          <div class="ex-head">
-            <div class="h">
-              <svg viewBox="0 0 24 24"><path d="M12 3 4 6.5v5c0 5 3.4 8.3 8 9.5 4.6-1.2 8-4.5 8-9.5v-5L12 3z"/><path d="m9 12 2 2 4-4"/></svg>
-              探索度
-            </div>
-            <div class="ex-sub" id="exSub">已发现 0 / 8 · 逛一逛解锁更多</div>
-          </div>
-          <div class="ex-list" id="exList"></div>
-        </div>
-      </div>
-
     </main>
 
     <section class="cell guestbook reveal" id="guestbook">
@@ -1346,52 +1308,6 @@
   }
   bdayTick();
   setInterval(bdayTick, 3600000);
-
-  // ── 网站探索度：记录访客互动进度（localStorage 持久，跨访问累计）──
-  (function(){
-    var KEY = 'home-explore', VISIT = 'home-visited';
-    var LIST = [
-      { id:'music',     label:'听过音乐',    hint:'放首歌听' },
-      { id:'avatar',    label:'逗了雌小鬼',  hint:'点一下头像' },
-      { id:'diag',      label:'摸到隐藏面板', hint:'试着键 diag' },
-      { id:'links',     label:'存下联系方式', hint:'复制邮箱' },
-      { id:'weather',   label:'施了个天气',  hint:'右下角天气' },
-      { id:'guestbook', label:'翻开留言板',  hint:'拉下留言板' },
-      { id:'bottom',    label:'逛到页底',    hint:'滑到最底' },
-      { id:'return',    label:'二度回来',    hint:'再来一次' }
-    ];
-    function load(){ try{ return JSON.parse(localStorage.getItem(KEY) || '{}'); }catch(e){ return {}; } }
-    function save(g){ try{ localStorage.setItem(KEY, JSON.stringify(g)); }catch(e){} }
-    var got = load();
-    var C = 2 * Math.PI * 19;   // 进度环周长 r=19
-    function render(){
-      var done = 0; LIST.forEach(function(m){ if (got[m.id]) done++; });
-      var arc = document.getElementById('exArc');
-      var pctEl = document.getElementById('exPct');
-      var subEl = document.getElementById('exSub');
-      var listEl = document.getElementById('exList');
-      if (arc)  arc.style.strokeDashoffset = (C * (1 - done / LIST.length)).toFixed(2);
-      if (pctEl) pctEl.textContent = Math.round(done / LIST.length * 100) + '%';
-      if (subEl) subEl.textContent = '已发现 ' + done + ' / ' + LIST.length + (done === LIST.length ? ' · 全解锁！' : ' · 逛一逛解锁更多');
-      if (listEl){
-        var html = '';
-        LIST.forEach(function(m){
-          html += got[m.id]
-            ? '<span class="ex-chip done"><span class="ck">✓</span>' + m.label + '</span>'
-            : '<span class="ex-chip"><span class="ck">?</span>' + m.hint + '</span>';
-        });
-        listEl.innerHTML = html;
-      }
-    }
-    function unlock(id){ if (!id || got[id]) return; got[id] = true; save(got); render(); }
-    window.exploreHit = unlock;   // 供各交互入口调用（含其它 <script> 块）
-    try { if (localStorage.getItem(VISIT)) unlock('return'); localStorage.setItem(VISIT, '1'); } catch(e){}
-    function onScroll(){
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 6) unlock('bottom');
-    }
-    window.addEventListener('scroll', onScroll, { passive:true });
-    render();
-  })();
 
   const audio     = document.getElementById('audio');
   const pbtn      = document.getElementById('pbtn');
@@ -1649,7 +1565,6 @@
 
   function togglePlay(){
     if (audio.paused){
-      if (window.exploreHit) window.exploreHit('music');
       audio.play().catch(() => {});
     } else {
       audio.pause();
@@ -1947,7 +1862,6 @@
     e.stopPropagation();
     startWeatherFX(b.dataset.w);
     markFxBtn(b.dataset.w);
-    if (window.exploreHit) window.exploreHit('weather');
   });
 
   document.addEventListener('visibilitychange', () => {
@@ -2128,7 +2042,6 @@
     gbToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     updateGbNote();
     if (open){
-      if (window.exploreHit) window.exploreHit('guestbook');
       ensureGiscus();
       setTimeout(() => gb.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 280);
     }
@@ -2137,7 +2050,6 @@
   document.querySelectorAll('button.ic').forEach(btn => {
     btn.addEventListener('click', async () => {
       const text = btn.dataset.val;
-      if (window.exploreHit) window.exploreHit('links');
       try{
         await navigator.clipboard.writeText(text);
       }catch(e){
@@ -2155,10 +2067,6 @@
         btn.dataset.tip = oldTip;
       }, 1200);
     });
-  });
-
-  document.querySelectorAll('a.ic').forEach(a => {
-    a.addEventListener('click', () => { if (window.exploreHit) window.exploreHit('links'); });
   });
 
   const eqEl = document.getElementById('eq');
@@ -2301,7 +2209,6 @@
   let quipTimer = null;
 
   function sayQuip(){
-    if (window.exploreHit) window.exploreHit('avatar');
     let i = lastQuip;
     while (QUIPS.length > 1 && i === lastQuip){
       i = Math.floor(Math.random() * QUIPS.length);
@@ -2711,7 +2618,7 @@
       })(0);
     }
 
-    function openDiag(){ if (window.exploreHit) window.exploreHit('diag'); collect(); diag.classList.add('show'); diag.setAttribute('aria-hidden','false'); }
+    function openDiag(){ collect(); diag.classList.add('show'); diag.setAttribute('aria-hidden','false'); }
     function closeDiag(){ diag.classList.remove('show'); diag.setAttribute('aria-hidden','true'); }
     function toggleDiag(){ diag.classList.contains('show') ? closeDiag() : openDiag(); }
 
