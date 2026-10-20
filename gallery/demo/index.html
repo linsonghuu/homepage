@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="canonical" href="https://linsonghuu.github.io/gallery/demo/">
+<title>照片占位 · Gallery · linsongりんそん</title>
+<meta name="description" content="这是一张占位图。把真实照片放进 gallery-src/original/，在 gallery.json 增加一条，再运行 build-gallery.py 即可。">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="linsongãããã">
+<meta property="og:title" content="照片占位">
+<meta property="og:description" content="这是一张占位图。把真实照片放进 gallery-src/original/，在 gallery.json 增加一条，再运行 build-gallery.py 即可。">
+<meta property="og:image" content="https://linsonghuu.github.io/images/gallery/display/demo.webp">
+<meta property="og:image:width" content="1600">
+<meta property="og:image:height" content="1000">
+<meta property="og:url" content="https://linsonghuu.github.io/gallery/demo/">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="照片占位">
+<meta name="twitter:image" content="https://linsonghuu.github.io/images/gallery/display/demo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/gallery/gallery.css">
+</head>
+<body class="photo-page" data-photo-id="demo">
+  <header class="gbar">
+    <a class="gback" href="/gallery/">&larr; <span>Gallery</span></a>
+    <a class="gbrand" href="/">linsongãããã</a>
+  </header>
+
+  <main class="photo">
+    <figure class="photo-stage" id="photoStage">
+      <img id="photoImg" src="/images/gallery/display/demo.webp" width="1600" height="1000"
+           alt="照片占位" decoding="async" fetchpriority="high">
+      <button class="zoom-hint" id="openBtn" aria-label="查看大图">⧉</button>
+    </figure>
+
+    <aside class="photo-info">
+      <h1 class="p-title">照片占位</h1>
+      <div class="p-meta">
+        <span class="p-cat">示例</span>
+        <span class="p-date">2026-10-20</span>
+        <span class="p-res">1600 × 1000</span>
+      </div>
+      <div class="p-tags"><a class="tag" href="/gallery/?tag=demo">#demo</a><a class="tag" href="/gallery/?tag=placeholder">#placeholder</a></div>
+      <p class="p-desc">这是一张占位图。把真实照片放进 gallery-src/original/，在 gallery.json 增加一条，再运行 build-gallery.py 即可。</p>
+      <div class="p-actions">
+        <button class="pbtn" id="zoomBtn">⧉ 查看大图</button>
+        <button class="pbtn" id="shareBtn">↻ 分享</button>
+      </div>
+      <nav class="p-nav"><a class="pnav prev" href="/gallery/demo/" rel="prev">&larr; 照片占位</a><a class="pnav next" href="/gallery/demo/" rel="next">照片占位 &rarr;</a></nav>
+    </aside>
+  </main>
+
+  <section class="comments" id="comments">
+    <h2 class="c-title">Comments · <span id="cCount">0</span></h2>
+    <form class="c-form" id="cForm" autocomplete="off">
+      <input class="c-name" id="cName" type="text" maxlength="24" placeholder="昵称">
+      <textarea class="c-text" id="cText" maxlength="500" placeholder="说点什么…"></textarea>
+      <input class="c-hp" id="cHoneypot" type="text" tabindex="-1" aria-hidden="true">
+      <div class="c-submitrow">
+        <button class="c-submit" id="cSubmit" type="submit">发表评论</button>
+        <span class="c-msg" id="cMsg"></span>
+      </div>
+    </form>
+    <div class="c-list" id="cList"></div>
+    <button class="c-more" id="cMore" type="button" hidden>加载更多</button>
+  </section>
+
+  <script>window.PHOTO = {"id": "demo", "title": "照片占位", "date": "2026-10-20", "category": "示例", "tags": ["demo", "placeholder"], "description": "这是一张占位图。把真实照片放进 gallery-src/original/，在 gallery.json 增加一条，再运行 build-gallery.py 即可。", "thumbnail": "/images/gallery/thumbnails/demo.webp", "display": "/images/gallery/display/demo.webp", "width": 1600, "height": 1000};</script>
+  <script src="/gallery/gallery.js" defer></script>
+</body>
+</html>
