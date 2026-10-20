@@ -963,27 +963,41 @@
   .diag .re{font-size:11.5px;padding:9px 12px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;cursor:pointer;opacity:.8;text-align:center;transition:opacity .15s,background .15s}
   .diag .re:hover{opacity:1;background:rgba(255,255,255,.09)}
   .diag .re.done{opacity:1;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3)}
-  /* 全部访客组：筛选条 + 卡片列表 */
+  /* 全部访客组：指标 + 筛选条 + 卡片列表（页面主角） */
   .diag .vbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-  .diag .vstat{font-family:var(--mono);font-size:11px;opacity:.72;white-space:nowrap}
+  .diag .vstat{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);white-space:nowrap}
+  .diag .chip{display:inline-flex;align-items:baseline;gap:5px;font-size:10px;opacity:.72;padding:3px 10px;border:1px solid rgba(255,255,255,.12);border-radius:20px}
+  .diag .chip b{font-size:14px;opacity:.95;font-weight:600}
   .diag .vseg{display:inline-flex;border:1px solid rgba(255,255,255,.14);border-radius:7px;overflow:hidden;margin-left:auto}
   .diag .vseg button{font-family:inherit;font-size:10.5px;padding:4px 9px;background:transparent;color:#f5f5f5;opacity:.5;cursor:pointer;border:none;transition:opacity .15s,background .15s}
   .diag .vseg button:hover{opacity:.85}
   .diag .vseg button.on{opacity:1;background:rgba(255,255,255,.1)}
-  .diag .vsearch{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11px;padding:6px 10px;border:1px solid rgba(255,255,255,.14);border-radius:7px;background:rgba(255,255,255,.04);color:#f5f5f5;outline:none}
+  .diag .vsearch{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11px;padding:7px 11px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;outline:none}
   .diag .vsearch::placeholder{opacity:.35}
   .diag .vsearch:focus{border-color:rgba(255,255,255,.3)}
-  .diag .vlist{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent;padding-right:2px}
+  .diag .vlist{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent;padding-right:2px;margin-top:2px}
   .diag .vlist::-webkit-scrollbar{width:7px}
   .diag .vlist::-webkit-scrollbar-track{background:transparent}
   .diag .vlist::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:7px}
-  .diag .vcard{display:flex;align-items:flex-start;gap:10px;padding:9px 11px;border:1px solid rgba(255,255,255,.08);border-radius:9px;background:rgba(255,255,255,.03);transition:border-color .15s,background .15s}
+  .diag .vcard{padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.03);transition:border-color .15s,background .15s}
   .diag .vcard:hover{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06)}
-  .diag .vcard .vid{font-family:var(--mono);font-size:11px;letter-spacing:.05em;opacity:.9;flex:none;width:72px}
-  .diag .vcard .vmeta{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-  .diag .vcard .vmeta .ml1{font-size:11px;opacity:.6;word-break:break-all}
-  .diag .vcard .vmeta .ml2{font-size:10px;opacity:.45;word-break:break-all}
-  .diag .vcard .vcnt{font-family:var(--mono);font-size:11px;opacity:.55;flex:none;white-space:nowrap;text-align:right}
+  .diag .vcard.ret{border-color:rgba(255,255,255,.16)}
+  .diag .vcard .vtop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+  .diag .vcard .vid{font-family:var(--mono);font-size:12px;letter-spacing:.06em;opacity:.95}
+  .diag .vcard .vtag{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;padding:2px 8px;border-radius:20px;border:1px solid rgba(255,255,255,.16);opacity:.7;white-space:nowrap}
+  .diag .vcard .vtag.new{opacity:.5}
+  .diag .vcard .vmeta{display:flex;flex-direction:column;gap:3px}
+  .diag .vcard .vmeta .ml1{font-size:11px;opacity:.62;word-break:break-all}
+  .diag .vcard .vmeta .ml2{font-size:10px;opacity:.42;word-break:break-all}
+  .diag .vcard .vmeta .ml3{font-size:10px;opacity:.38;font-family:var(--mono)}
+  /* 本机信息：默认折叠收起 */
+  .diag details.selfbox{margin-top:16px;border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.02)}
+  .diag details.selfbox>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:11px 14px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;user-select:none}
+  .diag details.selfbox>summary::-webkit-details-marker{display:none}
+  .diag details.selfbox>summary::before{content:'';width:0;height:0;border-left:5px solid currentColor;opacity:.55;transform:rotate(0);transition:transform .18s ease}
+  .diag details.selfbox[open]>summary::before{transform:rotate(90deg)}
+  .diag details.selfbox>summary .ssub{text-transform:none;letter-spacing:0;opacity:.45;font-size:10px}
+  .diag details.selfbox .selfbody{padding:2px 14px 14px}
   .diag .muted{opacity:.4;font-size:11px;padding:4px 0;display:block}
 
   @media (prefers-reduced-motion:reduce){
@@ -2151,16 +2165,10 @@
 <div class="diag" id="diag" role="dialog" aria-label="访客信息" aria-hidden="true">
   <div class="panel">
     <div class="phead">
-      <h3>访客信息 · Visitor Info<span class="x" id="diagClose" title="关闭">×</span></h3>
+      <h3>访客面板 · Visitors<span class="x" id="diagClose" title="关闭">×</span></h3>
       <span class="pbadge" id="diagBadge">—</span>
     </div>
     <p class="note">以下为浏览器在不请求任何权限（无定位 / 摄像头 / 通讯录等弹窗）的前提下，可直接读取的信息。仅你本人输入口令可见，访客无感。本站会汇总所有访客的匿名设备指纹与大致地理位置用于统计（经 Cloudflare Worker，不申请任何权限），数据仅站长可见。</p>
-    <div class="fid"><span class="fl">访客指纹 ID</span><span class="fv" id="fpId">—</span></div>
-    <div class="grp"><div class="gt">身份 / Identity</div><div id="gIdentity"></div></div>
-    <div class="grp"><div class="gt">硬件 / Hardware</div><div id="gHardware"></div></div>
-    <div class="grp"><div class="gt">屏幕 / Screen</div><div id="gScreen"></div></div>
-    <div class="grp"><div class="gt">网络 / Network</div><div id="gNetwork"></div></div>
-    <div class="grp"><div class="gt">指纹 / Fingerprint</div><div id="gFinger"></div></div>
     <div class="grp"><div class="gt">全部访客 / All Visitors</div>
       <div id="gAll" class="gall">
         <div class="vbar">
@@ -2169,11 +2177,22 @@
             <button data-sort="recent" class="on">最近</button>
             <button data-sort="count">次数</button>
           </span>
-          <input class="vsearch" id="vSearch" type="text" placeholder="搜索：指纹 / GPU / 城市 / UA…" autocomplete="off">
+          <input class="vsearch" id="vSearch" type="text" placeholder="搜索：指纹 / GPU / 城市 / IP / UA…" autocomplete="off">
         </div>
         <div class="vlist" id="vList"><span class="muted">未配置后端或尚未加载</span></div>
       </div>
     </div>
+    <details class="selfbox">
+      <summary>本机信息 / This Device <span class="ssub">（点击展开）</span></summary>
+      <div class="selfbody">
+        <div class="fid"><span class="fl">访客指纹 ID</span><span class="fv" id="fpId">—</span></div>
+        <div class="grp"><div class="gt">身份 / Identity</div><div id="gIdentity"></div></div>
+        <div class="grp"><div class="gt">硬件 / Hardware</div><div id="gHardware"></div></div>
+        <div class="grp"><div class="gt">屏幕 / Screen</div><div id="gScreen"></div></div>
+        <div class="grp"><div class="gt">网络 / Network</div><div id="gNetwork"></div></div>
+        <div class="grp"><div class="gt">指纹 / Fingerprint</div><div id="gFinger"></div></div>
+      </div>
+    </details>
     <div class="acts">
       <div class="re" id="diagRefresh">↻ 刷新</div>
       <div class="re" id="diagCopy">⧉ 复制全部</div>
@@ -2270,7 +2289,7 @@
           if(!d || !d.ok){ box.innerHTML = '<span class="muted">拉取失败：' + esc(d && d.err) + '</span>'; return; }
           diagVisitors = d.visitors || [];
           var st = document.getElementById('vStat');
-          if(st) st.textContent = '总访问 ' + (d.total||0) + ' · 独立访客 ' + (d.unique||0);
+          if(st) st.innerHTML = '<span class="chip"><b>'+(d.total||0)+'</b> 总访问</span><span class="chip"><b>'+(d.unique||0)+'</b> 独立访客</span>';
           var bd = document.getElementById('diagBadge');
           if(bd) bd.textContent = (d.unique||0) + ' 位访客';
           renderVisitors();
@@ -2292,9 +2311,15 @@
       var html = '';
       list.forEach(function(v){
         var city = v.city ? ' · ' + v.city : '';
-        var gpu = (v.gpu||'').slice(0,32);
-        var ua = (v.ua||'').slice(0,60);
-        html += '<div class="vcard"><span class="vid">' + esc(v.fp) + '</span><div class="vmeta"><span class="ml1">' + esc(gpu) + esc(city) + '</span><span class="ml2">' + esc(ua) + ' · ' + relTime(v.last) + '</span></div><span class="vcnt">×' + (v.count||1) + '</span></div>';
+        var ip = v.ip ? ' · ' + v.ip : '';
+        var gpu = (v.gpu||'').slice(0,40);
+        var ua = (v.ua||'').slice(0,72);
+        var cnt = v.count||1;
+        var tag = cnt>1 ? ('回头 ×'+cnt) : '新';
+        html += '<div class="vcard'+(cnt>1?' ret':'')+'"><div class="vtop"><span class="vid">'+esc(v.fp)+'</span><span class="vtag'+(cnt>1?'':' new')+'">'+tag+'</span></div>'
+              + '<div class="vmeta"><span class="ml1">'+esc(gpu)+esc(city)+esc(ip)+'</span>'
+              + '<span class="ml2">'+esc(ua)+'</span>'
+              + '<span class="ml3">最近 '+relTime(v.last)+' · 首见 '+relTime(v.first)+'</span></div></div>';
       });
       box.innerHTML = html;
     }
