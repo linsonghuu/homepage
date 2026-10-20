@@ -257,6 +257,7 @@
     var p = getPage();
     if (p !== 'gallery' && p !== 'photo') return; // 仅 gallery / 照片页需要初始化
     load().then(function () {
+      if (getPage() !== p) return; // 已离开该页（异步竞态），放弃初始化，避免对不存在的元素报错
       protect();
       if (p === 'photo') initPhoto(); else initIndex();
     });
