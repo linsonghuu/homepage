@@ -390,6 +390,20 @@
     opacity:.32;
     margin-top:2px;
   }
+  .gdoor{
+    margin-top:9px;
+    font-family:var(--mono);
+    font-size:10px;
+    letter-spacing:.08em;
+    text-decoration:none;
+    color:#cfcfcf;
+    padding:5px 13px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:20px;
+    opacity:.72;
+    transition:opacity .2s,border-color .2s,color .2s;
+  }
+  .gdoor:hover{opacity:1;color:#fff;border-color:rgba(255,255,255,.28)}
 
   .ic::after{
     content:attr(data-tip);
@@ -1143,6 +1157,7 @@
           </button>
         </div>
         <div class="copy-hint">click to copy</div>
+        <a class="gdoor" href="/gallery/">Gallery ↗</a>
       </div>
 
     </main>
