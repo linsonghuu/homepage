@@ -161,7 +161,7 @@
         var ovm=[it.category,it.date,it.width?(it.width+'×'+it.height):''].filter(Boolean).join(' · ');
         return '<div class="card" data-i="'+i+'" role="button" tabindex="0" aria-label="'+esc(it.title||'')+'">'+
           '<div class="ph" style="'+ar+'"><img src="'+esc(it.thumbnail)+'" width="'+(it.width||'')+'" height="'+(it.height||'')+
-          '" alt="'+esc(it.title||'')+'" loading="lazy" decoding="async"><div class="ov"><div class="ovt">'+esc(it.title||'')+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
+          '" alt="'+esc(it.title||'')+'" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+' decoding="async"><div class="ov"><div class="ovt">'+esc(it.title||'')+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
       }).join('');
       var imgs=grid.querySelectorAll('.card img');
       for(var j=0;j<imgs.length;j++){ (function(im){ function on(){im.classList.add('loaded');} if(im.complete)on(); else im.addEventListener('load',on); })(imgs[j]); }
@@ -174,7 +174,7 @@
   }
 
   var Cmt = (function () {
-    var pid='', page=0, per=6, total=0, list=[];
+    var pid='', page=0, per=6, total=0, list=[], loadedOnce=false;
     function fetchList(reset){
       if(reset){ page=0; list=[]; var b0=$('#cList'); if(b0) b0.innerHTML='<div class="c-loading">加载评论…</div>'; }
       // 加 t 参数 + no-store：避免删除后重新拉取仍命中浏览器/中间缓存，看到“删了还在”
@@ -296,10 +296,22 @@
         more.disabled=true; page++;
         fetchList(false).then(function(){ more.disabled=false; });
       });
-      load(document.body.dataset.photoId||'');
+      // 评论区在首屏下方：滚到附近再拉，避免和主图抢带宽（若已通过切图加载过则不再重复）
+      var target=$('#comments') || $('#cList');
+      if ('IntersectionObserver' in window && target){
+        var io=new IntersectionObserver(function(es){
+          for(var i=0;i<es.length;i++){
+            if(es[i].isIntersecting){ io.disconnect(); if(!loadedOnce) load(document.body.dataset.photoId||''); return; }
+          }
+        }, { rootMargin:'300px 0px' });
+        io.observe(target);
+      } else {
+        load(document.body.dataset.photoId||'');
+      }
     }
     // 切换图片（Lightbox 上一张/下一张）时刷新评论区
     function load(photoId){
+      loadedOnce = true;
       pid = photoId || document.body.dataset.photoId || '';
       fetchList(true);
     }
