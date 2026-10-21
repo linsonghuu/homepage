@@ -16,6 +16,110 @@
       "display": "/images/gallery/display/vrchat-2026-09-16.webp",
       "width": 1920,
       "height": 1080
+    },
+    {
+      "id": "vrchat-lantern-wave",
+      "title": "灯海·招手",
+      "date": "2026-02-04",
+      "category": "VRChat",
+      "tags": [
+        "vrchat",
+        "灯会",
+        "夜景",
+        "狐狸",
+        "雪"
+      ],
+      "description": "灯会夜色里，狐狸耳朵的少女抬手打招呼，木桥与雪山在身后铺开。",
+      "thumbnail": "/images/gallery/thumbnails/vrchat-lantern-wave.webp",
+      "display": "/images/gallery/display/vrchat-lantern-wave.webp",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": "vrchat-lantern-bridge",
+      "title": "灯海·倚桥",
+      "date": "2026-02-04",
+      "category": "VRChat",
+      "tags": [
+        "vrchat",
+        "灯会",
+        "夜景",
+        "雪"
+      ],
+      "description": "靠在桥边的片刻，天灯从头顶缓缓升起。",
+      "thumbnail": "/images/gallery/thumbnails/vrchat-lantern-bridge.webp",
+      "display": "/images/gallery/display/vrchat-lantern-bridge.webp",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": "vrchat-lantern-snow",
+      "title": "灯海·卧雪",
+      "date": "2026-02-04",
+      "category": "VRChat",
+      "tags": [
+        "vrchat",
+        "灯会",
+        "雪",
+        "夜景"
+      ],
+      "description": "躺在雪地上，看灯海与远山。",
+      "thumbnail": "/images/gallery/thumbnails/vrchat-lantern-snow.webp",
+      "display": "/images/gallery/display/vrchat-lantern-snow.webp",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": "vrchat-snow-moon",
+      "title": "雪夜·月与星",
+      "date": "2026-02-04",
+      "category": "VRChat",
+      "tags": [
+        "vrchat",
+        "圣诞",
+        "月亮",
+        "星空",
+        "雪"
+      ],
+      "description": "圣诞夜的雪与月亮，星轨在身后转了一圈。",
+      "thumbnail": "/images/gallery/thumbnails/vrchat-snow-moon.webp",
+      "display": "/images/gallery/display/vrchat-snow-moon.webp",
+      "width": 1920,
+      "height": 1080
+    },
+    {
+      "id": "vrchat-bouquet-night",
+      "title": "花束·夜归",
+      "date": "2026-02-04",
+      "category": "VRChat",
+      "tags": [
+        "vrchat",
+        "花束",
+        "夜景",
+        "向日葵"
+      ],
+      "description": "抱着一束花站在夜色里，旁边是一朵过大的向日葵。",
+      "thumbnail": "/images/gallery/thumbnails/vrchat-bouquet-night.webp",
+      "display": "/images/gallery/display/vrchat-bouquet-night.webp",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "id": "vrchat-bouquet-close",
+      "title": "花束·近景",
+      "date": "2026-02-04",
+      "category": "VRChat",
+      "tags": [
+        "vrchat",
+        "花束",
+        "夜景",
+        "特写"
+      ],
+      "description": "花束挡住半张脸，只露出眼睛。",
+      "thumbnail": "/images/gallery/thumbnails/vrchat-bouquet-close.webp",
+      "display": "/images/gallery/display/vrchat-bouquet-close.webp",
+      "width": 1080,
+      "height": 1920
     }
   ]
 }
