@@ -63,9 +63,27 @@ body{
 .gsearch:focus{border-color:rgba(255,255,255,.3)}
 
 /* ── 瀑布流 ── */
-.grid{columns:3;column-gap:16px;padding-bottom:80px}
-@media (max-width:900px){ .grid{columns:2} }
-@media (max-width:560px){ .grid{columns:1} }
+.grid{display:flex;flex-direction:column;gap:16px;padding-bottom:80px}
+.grid .cards{columns:3;column-gap:16px}
+@media (max-width:900px){ .grid .cards{columns:2} .feat{max-width:100%} }
+@media (max-width:560px){ .grid .cards{columns:1} }
+
+/* 最新一张：大图 hero（宽度按 60vh × 宽高比，竖图也不会过宽） */
+.feat{position:relative;width:100%;max-width:calc(60vh * var(--ar,1.7778));margin:0 auto;
+  border-radius:var(--r-card);overflow:hidden;background:var(--cell);border:1px solid rgba(255,255,255,.1);
+  cursor:zoom-in;transition:border-color .3s}
+.feat:hover{border-color:rgba(255,255,255,.24)}
+.feat-ph{position:relative;width:100%;overflow:hidden}
+.feat-ph img{width:100%;height:auto;display:block;opacity:0;transition:opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1)}
+.feat-ph img.loaded{opacity:1}
+.feat:hover .feat-ph img{transform:scale(1.03)}
+.feat-tag{position:absolute;top:14px;left:14px;z-index:2;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
+  padding:4px 10px;border-radius:14px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.18);color:#f0f0f0;backdrop-filter:blur(6px)}
+.feat-ov{position:absolute;left:0;right:0;bottom:0;padding:30px 26px 22px;text-align:left;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.5) 45%,rgba(0,0,0,.88) 100%)}
+.feat-t{font-size:clamp(18px,2.6vw,26px);font-weight:700;line-height:1.2}
+.feat-d{margin-top:8px;font-size:13px;line-height:1.65;opacity:.78;max-width:620px}
+.feat-m{margin-top:10px;font-family:var(--mono);font-size:10px;opacity:.55;letter-spacing:.04em}
 .card{
   break-inside:avoid;-webkit-column-break-inside:avoid;
   margin:0 0 16px;position:relative;border-radius:var(--r-mid);overflow:hidden;
@@ -83,9 +101,9 @@ body{
   position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
   padding:14px;gap:4px;pointer-events:none;
   background:linear-gradient(180deg,transparent 45%,rgba(0,0,0,.72) 100%);
-  opacity:0;transition:opacity .35s;
+  opacity:0;transform:translateY(8px);transition:opacity .35s, transform .35s cubic-bezier(.22,1,.36,1);
 }
-.card:hover .ov{opacity:1}
+.card:hover .ov,.card:focus-visible .ov{opacity:1;transform:none}
 .card .ov .ovt{font-size:13.5px;font-weight:600}
 .card .ov .ovm{font-family:var(--mono);font-size:10px;opacity:.72;letter-spacing:.03em}
 
