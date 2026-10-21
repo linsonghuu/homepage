@@ -185,17 +185,15 @@
   .about  {grid-area:about}
   .time   {grid-area:time}
   .links  {grid-area:links}
-.weather{grid-area:weather}
+  .weather{grid-area:weather}
 .birthday{grid-area:birthday}
-.snow{grid-area:snow}
 
   .bento{
     display:grid;
     grid-template-columns:repeat(3,1fr);
     grid-template-areas:
       "profile about birthday"
-      "time    links weather"
-      "snow    snow    snow";
+      "time    links weather";
     gap:11px;
   }
 
@@ -243,50 +241,6 @@
     .cell:hover::after{opacity:1}
   }
   .cell:hover{border-color:#2e2e2e}
-
-  /* ── 温暖的雪夜（通栏氛围卡）── */
-  .snow{
-    position:relative;
-    overflow:hidden;
-    display:block;
-    text-align:left;
-    padding:0;
-    min-height:210px;
-    background:
-      radial-gradient(120% 92% at 76% 20%, rgba(255,150,60,.11), transparent 58%),
-      linear-gradient(180deg,#070b14 0%,#0a0f1c 46%,#05070e 100%);
-  }
-  .snow-ground{
-    position:absolute;left:0;right:0;bottom:0;height:36%;
-    background:linear-gradient(180deg,rgba(198,214,240,.05),rgba(160,180,215,.10));
-    border-top:1px solid rgba(200,215,240,.10);
-    z-index:0;pointer-events:none;
-  }
-  .snow-window{
-    position:absolute;right:22%;top:24%;
-    width:78px;height:96px;
-    border-radius:5px;
-    background:linear-gradient(180deg,#ffd79a 0%,#ffab5e 55%,#ff9a4a 100%);
-    box-shadow:
-      0 0 0 3px rgba(20,14,8,.92),
-      0 0 60px 16px rgba(255,160,70,.40),
-      0 0 150px 46px rgba(255,150,60,.20);
-    z-index:1;
-  }
-  .snow-window::before,.snow-window::after{content:"";position:absolute;background:rgba(24,16,10,.85)}
-  .snow-window::before{left:50%;top:7%;bottom:7%;width:3px;transform:translateX(-50%)}
-  .snow-window::after{left:7%;right:7%;top:47%;height:3px}
-  .snow-pool{
-    position:absolute;right:6%;bottom:-14%;
-    width:230px;height:120px;
-    background:radial-gradient(ellipse at 50% 0%,rgba(255,175,90,.32),transparent 68%);
-    filter:blur(8px);
-    z-index:0;pointer-events:none;
-  }
-  .snow-fx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
-  .snow-copy{position:absolute;left:24px;bottom:22px;z-index:3;max-width:min(58%,340px)}
-  .snow-copy .h{justify-content:flex-start}
-  .snow-line{margin-top:9px;font-size:12.5px;line-height:1.55;color:rgba(245,245,245,.6)}
 
   .h{
     display:flex;
@@ -968,7 +922,7 @@
     .bento{
       grid-template-columns:1fr;
       grid-template-areas:
-        "profile" "about" "birthday" "time" "links" "weather" "snow";
+        "profile" "about" "birthday" "time" "links" "weather";
       gap:9px;
     }
     .cell{border-radius:22px;padding:18px 15px}
