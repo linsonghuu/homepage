@@ -1,8 +1,25 @@
 {
   "ok": true,
-  "total": 136,
+  "total": 137,
   "unique": 3,
   "visitors": [
+    {
+      "fp": "7a81898d",
+      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+      "platform": "Windows",
+      "gpu": "ANGLE (AMD, AMD Radeon RX 9070 XT (0x00007550) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "ip": "67.159.48.147",
+      "city": "Singapore · SG",
+      "first": 1792480590766,
+      "last": 1792584869101,
+      "count": 125,
+      "verdict": "human",
+      "webdriver": false,
+      "asn": 30058,
+      "org": "FDCservers.net",
+      "tz": "Asia/Singapore",
+      "colo": "MRS"
+    },
     {
       "fp": "69ca45ae",
       "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) WorkBuddyAI/5.8.4 workbuddy-ai/5.8.4 Chrome/138.0.7204.251 Electron/37.10.3 Safari/537.36",
@@ -23,23 +40,6 @@
       "colo": "CDG"
     },
     {
-      "fp": "7a81898d",
-      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
-      "platform": "Windows",
-      "gpu": "ANGLE (AMD, AMD Radeon RX 9070 XT (0x00007550) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "67.159.48.147",
-      "city": "Singapore · SG",
-      "first": 1792480590766,
-      "last": 1792583994816,
-      "count": 123,
-      "verdict": "human",
-      "webdriver": false,
-      "asn": 30058,
-      "org": "FDCservers.net",
-      "tz": "Asia/Singapore",
-      "colo": "FRA"
-    },
-    {
       "fp": "1f8ae7ee",
       "ua": "Mozilla/5.0 (Linux; Android 16; 25113PN0EG Build/BP2A.250605.031.A3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/155.0.8059.73 Mobile Safari/537.36 Instagram 451.0.0.53.80 Android (36/16; 520dpi; 1220x2656; Xiaomi; 25113PN0EG; pudding; qcom; zh_TW; 1089933786; IABMV/1)",
       "platform": "Android",
@@ -53,5 +53,5 @@
       "webdriver": false
     }
   ],
-  "syncedAt": 1792584797041
+  "syncedAt": 1792585176373
 }
