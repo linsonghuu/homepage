@@ -1,0 +1,107 @@
+/* 隐藏访客信息面板（diag）样式。
+   面板 HTML 位于 SPA 常驻外壳（#view 之外），会跨页面存活，
+   因此样式必须所有页面常驻加载：不加 data-page-css，router 便不会移除它。 */
+  .diag{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:24px;background:rgba(0,0,0,.62);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+  .diag.show{display:flex}
+  .diag .panel{position:relative;max-width:580px;width:100%;max-height:86vh;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent;scrollbar-gutter:stable;overscroll-behavior:contain;background:linear-gradient(158deg,rgba(255,255,255,.07) 0%,rgba(255,255,255,.025) 100%);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:22px 24px;box-shadow:0 24px 70px rgba(0,0,0,.7)}
+  .diag .panel::-webkit-scrollbar{width:9px;height:9px}
+  .diag .panel::-webkit-scrollbar-track{background:transparent}
+  .diag .panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:9px;border:2px solid transparent;background-clip:padding-box}
+  .diag .panel::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.32);background-clip:padding-box}
+  .diag .panel::-webkit-scrollbar-corner{background:transparent}
+  .diag .phead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:4px}
+  .diag .phead h3{font-size:14px;font-weight:600;letter-spacing:.01em;margin:0;display:flex;align-items:center;gap:8px}
+  .diag .phead h3 .x{cursor:pointer;opacity:.5;font-size:18px;line-height:1;padding:2px 6px;border-radius:6px}
+  .diag .phead h3 .x:hover{opacity:1;background:rgba(255,255,255,.08)}
+  .diag .phead .pbadge{font-family:var(--mono);font-size:10px;letter-spacing:.04em;opacity:.5;white-space:nowrap}
+  .diag .ptoggle{font-family:inherit;font-size:10px;letter-spacing:.04em;padding:3px 9px;border:1px solid rgba(255,255,255,.16);border-radius:20px;background:transparent;color:#f5f5f5;opacity:.55;cursor:pointer;transition:opacity .15s,background .15s}
+  .diag .ptoggle:hover{opacity:.9}
+  .diag .ptoggle.on{opacity:1;background:rgba(255,255,255,.1)}
+  .diag .note{font-size:10.5px;opacity:.4;margin:8px 0 2px;line-height:1.55}
+  .diag .fid{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:14px;padding:13px 16px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03))}
+  .diag .fid .fl{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;flex:none}
+  .diag .fid .fv{font-family:var(--mono);font-size:20px;letter-spacing:.1em;color:#f5f5f5;text-align:right;word-break:break-all}
+  .diag .grp{margin-top:16px}
+  .diag .gt{font-size:10px;letter-spacing:.1em;text-transform:uppercase;opacity:.5;margin-bottom:7px;display:flex;align-items:center;gap:8px}
+  .diag .gt::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+  .diag .row{display:block;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+  .diag .row:last-child{border-bottom:none}
+  .diag .row .rline{display:flex;justify-content:space-between;gap:16px;font-size:12.5px}
+  .diag .row .rline b{font-weight:500;opacity:.55;flex:none}
+  .diag .row .rline span{text-align:right;font-family:var(--mono);font-size:11.5px;word-break:break-all;opacity:.92}
+  .diag .row .exp{font-size:10px;opacity:.42;line-height:1.55;margin-top:3px;display:none;word-break:break-all}
+  .diag.explain .row .exp{display:block}
+  .diag .acts{display:flex;gap:10px;margin-top:18px}
+  .diag .acts .re{margin-top:0;flex:1}
+  .diag .re{font-size:11.5px;padding:9px 12px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;cursor:pointer;opacity:.8;text-align:center;transition:opacity .15s,background .15s}
+  .diag .re:hover{opacity:1;background:rgba(255,255,255,.09)}
+  .diag .re.done{opacity:1;background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.3)}
+  /* 全部访客组：指标 + 筛选条 + 卡片列表（页面主角） */
+  .diag .vbar{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+  .diag .vstat{display:flex;gap:6px;flex-wrap:wrap;font-family:var(--mono);white-space:nowrap}
+  .diag .chip{display:inline-flex;align-items:baseline;gap:5px;font-size:10px;opacity:.72;padding:3px 10px;border:1px solid rgba(255,255,255,.12);border-radius:20px}
+  .diag .chip b{font-size:14px;opacity:.95;font-weight:600}
+  .diag .chip.warn{opacity:.9;border-color:rgba(255,200,120,.4);color:rgba(255,200,120,.95)}
+  .diag .vseg{display:inline-flex;border:1px solid rgba(255,255,255,.14);border-radius:7px;overflow:hidden}
+  .diag .vbar #vSort{margin-left:auto}
+  .diag .vseg button{font-family:inherit;font-size:10.5px;padding:4px 9px;background:transparent;color:#f5f5f5;opacity:.5;cursor:pointer;border:none;transition:opacity .15s,background .15s}
+  .diag .vseg button:hover{opacity:.85}
+  .diag .vseg button.on{opacity:1;background:rgba(255,255,255,.1)}
+  .diag .vsearch{width:100%;box-sizing:border-box;font-family:var(--mono);font-size:11px;padding:7px 11px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;outline:none}
+  .diag .snap{font-family:var(--mono);font-size:9.5px;opacity:.5;margin:0 0 8px;letter-spacing:.02em}
+  .diag .snap.warn{opacity:.8;color:rgba(255,200,120,.92)}
+  .diag .vadmin{margin:0 0 12px;display:flex;flex-direction:column;gap:8px;padding:11px 12px;border:1px dashed rgba(255,255,255,.14);border-radius:10px}
+  .diag .va-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .diag .va-l{font-family:var(--mono);font-size:10px;opacity:.5;flex:none;min-width:52px}
+  .diag .va-row input{flex:1;min-width:80px;font-family:var(--mono);font-size:11px;padding:6px 9px;border:1px solid rgba(255,255,255,.14);border-radius:8px;background:rgba(255,255,255,.04);color:#f5f5f5;outline:none}
+  .diag .va-row input:focus{border-color:rgba(255,255,255,.3)}
+  .diag .va-arrow{opacity:.4;flex:none}
+  .diag .va-row button{font-family:var(--mono);font-size:10.5px;padding:6px 12px;border-radius:16px;cursor:pointer;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#eaeaea;flex:none}
+  .diag .va-row button:hover{background:rgba(255,255,255,.14)}
+  .diag .va-hint{font-family:var(--mono);font-size:9px;opacity:.3;flex:none}
+  .diag .va-msg{font-family:var(--mono);font-size:9.5px;opacity:.65;flex:1;min-width:120px;color:rgba(255,214,138,.92)}
+  .diag .vadmrow{display:flex;gap:7px;margin-top:7px;align-items:center}
+  .diag .vnote{flex:1;min-width:0;font-family:var(--sans);font-size:11px;padding:5px 9px;border:1px solid rgba(255,255,255,.13);border-radius:8px;background:rgba(255,255,255,.03);color:#f0f0f0;outline:none}
+  .diag .vnote:focus{border-color:rgba(255,255,255,.28)}
+  .diag .vmg{font-family:var(--mono);font-size:10px;padding:5px 9px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.13);background:transparent;color:#c9c9c9;flex:none}
+  .diag .vmg:hover{background:rgba(255,255,255,.1);color:#fff}
+  .diag .vdel{font-family:var(--mono);font-size:10px;padding:5px 9px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,120,120,.4);background:rgba(255,80,80,.16);color:#ff9a9a;flex:none;margin-left:auto}
+  .diag .vdel:hover{background:rgba(255,80,80,.3);color:#ffd0d0}
+  .diag .va-danger{font-family:var(--mono);font-size:11px;padding:6px 12px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,120,120,.5);background:rgba(255,80,80,.2);color:#ffb3b3}
+  .diag .va-danger:hover{background:rgba(255,80,80,.34);color:#fff}
+  .diag .vsearch::placeholder{opacity:.35}
+  .diag .vsearch:focus{border-color:rgba(255,255,255,.3)}
+  .diag .vlist{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.16) transparent;padding-right:2px;margin-top:2px}
+  .diag .vlist::-webkit-scrollbar{width:7px}
+  .diag .vlist::-webkit-scrollbar-track{background:transparent}
+  .diag .vlist::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:7px}
+  .diag .vcard{padding:10px 12px;border:1px solid rgba(255,255,255,.08);border-radius:10px;background:rgba(255,255,255,.03);transition:border-color .15s,background .15s}
+  .diag .vcard:hover{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06)}
+  .diag .vcard.ret{border-color:rgba(255,255,255,.16)}
+  .diag .vcard .vtop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:5px}
+  .diag .vcard .vid{font-family:var(--mono);font-size:12px;letter-spacing:.06em;opacity:.95}
+  .diag .vcard .vtag{font-family:var(--mono);font-size:9.5px;letter-spacing:.03em;padding:2px 8px;border-radius:20px;border:1px solid rgba(255,255,255,.16);opacity:.7;white-space:nowrap}
+  .diag .vcard .vtag.new{opacity:.5}
+  .diag .vcard .vmeta{display:flex;flex-direction:column;gap:3px}
+  .diag .vcard .vmeta .ml1{font-size:11px;opacity:.62;word-break:break-all}
+  .diag .vcard .vmeta .ml2{font-size:10px;opacity:.42;word-break:break-all}
+  .diag .vcard .vmeta .ml3{font-size:10px;opacity:.38;font-family:var(--mono)}
+  /* 本机信息：默认折叠收起 */
+  .diag details.selfbox{margin-top:16px;border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;background:rgba(255,255,255,.02)}
+  .diag details.selfbox>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:11px 14px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;opacity:.7;user-select:none}
+  .diag details.selfbox>summary::-webkit-details-marker{display:none}
+  .diag details.selfbox>summary::before{content:'';width:0;height:0;border-left:5px solid currentColor;opacity:.55;transform:rotate(0);transition:transform .18s ease}
+  .diag details.selfbox[open]>summary::before{transform:rotate(90deg)}
+  .diag details.selfbox>summary .ssub{text-transform:none;letter-spacing:0;opacity:.45;font-size:10px}
+  .diag details.selfbox .selfbody{padding:2px 14px 14px}
+  .diag .muted{opacity:.4;font-size:11px;padding:4px 0;display:block}
+  /* 说明模式：全部访客卡片切换为带标签的完整数值 */
+  .diag .vcard .vright{display:flex;align-items:center;gap:6px}
+  .diag .vcard .vc{font-family:var(--mono);font-size:10px;opacity:.5}
+  .diag .vcard.det .vmeta{display:block}
+  .diag .vcard .vrow{display:flex;gap:8px;font-size:11px;padding:2px 0;align-items:baseline}
+  .diag .vcard .vrow .kl{flex:none;min-width:46px;width:54px;white-space:nowrap;opacity:.5}
+  .diag .vcard .vrow .vv{flex:1;min-width:0;opacity:.9;word-break:break-all;font-family:var(--mono);font-size:10.5px}
+  .diag .vtag.ok{opacity:.6;border-color:rgba(255,255,255,.16)}
+  .diag .vtag.warn{opacity:.85;border-color:rgba(255,200,120,.4);color:rgba(255,200,120,.95)}
+  .diag .vtag.bad{opacity:.9;border-color:rgba(255,150,150,.45);color:rgba(255,150,150,.95)}
