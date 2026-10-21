@@ -323,3 +323,7 @@ body{
 
 /* 键盘焦点可见（无障碍） */
 :focus-visible{outline:2px solid rgba(255,255,255,.55);outline-offset:3px;border-radius:6px}
+
+/* 分类计数 + 快捷键提示 */
+.cats .cat-n{margin-left:5px;font-size:9px;opacity:.5;font-weight:400}
+.ghead kbd{font-family:var(--mono);font-size:10px;padding:1px 5px;border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.05);margin:0 1px}
