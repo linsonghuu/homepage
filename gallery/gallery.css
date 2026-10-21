@@ -271,3 +271,14 @@ body{
 .a-reply{display:flex;gap:8px;margin-top:10px}
 .a-reply input{flex:1;font-family:var(--sans);font-size:12.5px;padding:8px 11px;border-radius:var(--r-sm);border:1px solid rgba(255,255,255,.13);background:rgba(255,255,255,.04);color:#f0f0f0;outline:none}
 .a-empty{padding:40px;text-align:center;font-family:var(--mono);font-size:11px;opacity:.4}
+
+/* 图片拖拽/选中防护（原先由 JS 运行时注入 <style>，统一放进样式表） */
+.card img,.photo-stage img,.lb-stage img{-webkit-user-drag:none;user-drag:none;user-select:none;-webkit-user-select:none;pointer-events:auto}
+
+/* 站长内联删除评论（仅本机存有站长令牌时由 JS 渲染，访客不可见） */
+.c-del{margin-left:10px;flex:none;font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;padding:2px 8px;border-radius:20px;cursor:pointer;background:transparent;border:1px solid rgba(255,110,110,.35);color:#ff9a9a;opacity:.6;transition:opacity .15s,background .15s,color .15s}
+.c-del:hover{opacity:1;background:rgba(255,80,80,.16);color:#ffd0d0}
+.c-del:disabled{opacity:.3;cursor:default}
+
+/* 评论加载中 */
+.c-loading{padding:26px 0;text-align:center;font-family:var(--mono);font-size:11px;opacity:.4;border-top:1px solid rgba(255,255,255,.07)}
