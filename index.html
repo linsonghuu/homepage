@@ -27,7 +27,6 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="/home.css" data-page-css="home">
 <link rel="stylesheet" href="/diag.css">
-<script src="/visitor-parse.js" defer></script>
 </head>
 <body>
 
@@ -1562,13 +1561,19 @@
           if(box.classList.contains('open')){
             box.classList.remove('open'); btn.classList.remove('on'); btn.textContent = '详细解析';
           } else {
-            if(!box.getAttribute('data-done')){
-              var v = null;
-              for(var i=0;i<diagVisitors.length;i++){ if(diagVisitors[i].fp === fp){ v = diagVisitors[i]; break; } }
-              box.innerHTML = (window.VisitorParse && v) ? window.VisitorParse.render(v) : '<div class="vp-sec"><div class="vp-h">解析不可用</div><p class="vp-overview">解析模块未加载，请刷新页面重试。</p></div>';
+            var openBox = function(){
+              box.classList.add('open'); btn.classList.add('on'); btn.textContent = '收起解析';
+            };
+            if(box.getAttribute('data-done')){ openBox(); return; }
+            var v = null;
+            for(var i=0;i<diagVisitors.length;i++){ if(diagVisitors[i].fp === fp){ v = diagVisitors[i]; break; } }
+            var paint = function(){
+              box.innerHTML = (window.VisitorParse && v) ? window.VisitorParse.render(v) : '<div class="vp-sec"><div class="vp-h">解析不可用</div><p class="vp-overview">解析模块加载失败，请刷新页面重试。</p></div>';
               box.setAttribute('data-done','1');
-            }
-            box.classList.add('open'); btn.classList.add('on'); btn.textContent = '收起解析';
+              openBox();
+            };
+            if(!v || window.VisitorParse){ paint(); }
+            else { box.innerHTML = '<div class="c-loading">解析模块加载中…</div>'; ensureParser(paint); }
           }
           return;
         }
@@ -1747,7 +1752,23 @@
       })(0);
     }
 
-    function openDiag(){ collect(); diag.classList.add('show'); diag.setAttribute('aria-hidden','false'); }
+    // 解析模块按需加载：只有打开 diag 面板 / 点「详细解析」时才拉 visitor-parse.js（约 40KB）
+    var parserLoading=false, parserQueue=[];
+    function ensureParser(cb){
+      if(window.VisitorParse){ if(cb) cb(); return; }
+      if(cb) parserQueue.push(cb);
+      if(parserLoading) return;
+      parserLoading=true;
+      var s=document.createElement('script');
+      s.src='/visitor-parse.js';
+      s.onload=s.onerror=function(){
+        parserLoading=false;
+        var q=parserQueue.slice(); parserQueue=[];
+        for(var i=0;i<q.length;i++){ try{ q[i](); }catch(e){} }
+      };
+      document.head.appendChild(s);
+    }
+    function openDiag(){ ensureParser(); collect(); diag.classList.add('show'); diag.setAttribute('aria-hidden','false'); }
     function closeDiag(){ diag.classList.remove('show'); diag.setAttribute('aria-hidden','true'); }
     function toggleDiag(){ diag.classList.contains('show') ? closeDiag() : openDiag(); }
 
