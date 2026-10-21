@@ -98,16 +98,29 @@
       else copy(url,'Link copied'); }
     function toComments(){ var id=cur[idx].id; close(); if(isPhoto()){ var el=document.getElementById('comments'); if(el) el.scrollIntoView({behavior:'smooth'}); } else if(window.SPA){ window.SPA.navigate('/gallery/'+id+'/#comments'); } else { location.href='/gallery/'+id+'/#comments'; } }
     function close(){ if(!root) return; root.classList.remove('show'); root.setAttribute('aria-hidden','true'); document.body.style.overflow=''; img.src=''; }
+    // 离开 gallery/photo 页时销毁：Lightbox 挂在 body（#view 之外），其样式在 gallery.css；
+    // 若不销毁，返回主页后 gallery.css 被 router 移除 → Lightbox 丢失 display:none 变成裸块。
+    function destroy(){
+      if(root && root.parentNode) root.parentNode.removeChild(root);
+      root=null; built=false; stage=img=count=title=meta=desc=null; cur=[]; idx=0;
+      document.body.style.overflow='';
+    }
     function copy(t,m){ if(navigator.clipboard) navigator.clipboard.writeText(t).then(function(){toast(m);}).catch(function(){fb(t);toast(m);}); else {fb(t);toast(m);} }
     function fb(t){ var ta=document.createElement('textarea'); ta.value=t; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} ta.remove(); }
     function toast(t){ var el=$('#lbToast'); if(!el){ el=document.createElement('div'); el.className='lb-toast'; el.id='lbToast'; document.body.appendChild(el);} el.textContent=t; el.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(function(){el.classList.remove('show');},1500); }
     function push(it){ history.replaceState(null,'','/gallery/'+it.id+'/?view=1'); if(window.paintPhoto) window.paintPhoto(it);
       document.title=(it.title||'Photo')+' · Gallery · linsong'; }
-    return { open:open, close:close, go:go, toast:toast };
+    return { open:open, close:close, go:go, toast:toast, destroy:destroy };
   })();
   document.addEventListener('keydown', function (e) {
     var lb=$('#galleryLB'); if(!lb || !lb.classList.contains('show')) return;
     if(e.key==='Escape') LB.close(); else if(e.key==='ArrowRight') LB.go(1); else if(e.key==='ArrowLeft') LB.go(-1);
+  });
+
+  // SPA 离开 gallery/photo 时销毁 Lightbox（它挂在 body 上，样式却在 gallery.css，留到主页会裸奔）
+  window.addEventListener('spa:navigate', function (e) {
+    var p = e.detail && e.detail.page;
+    if (p !== 'gallery' && p !== 'photo') LB.destroy();
   });
 
   function initIndex() {
