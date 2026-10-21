@@ -27,6 +27,7 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="/home.css" data-page-css="home">
 <link rel="stylesheet" href="/diag.css">
+<script src="/visitor-parse.js"></script>
 </head>
 <body>
 
@@ -126,20 +127,6 @@
         </div>
         <div class="copy-hint">click to copy</div>
         <a class="gdoor" href="/gallery/">Gallery ↗</a>
-      </div>
-
-      <div class="cell snow reveal" id="snowCard">
-        <span class="snow-ground" aria-hidden="true"></span>
-        <span class="snow-window" aria-hidden="true"></span>
-        <span class="snow-pool" aria-hidden="true"></span>
-        <canvas class="snow-fx" id="snowFx" aria-hidden="true"></canvas>
-        <div class="snow-copy">
-          <div class="h">
-            <svg viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>
-            温暖的雪夜
-          </div>
-          <p class="snow-line">窗外是雪，屋里还留着灯。</p>
-        </div>
       </div>
 
     </main>
@@ -1536,7 +1523,10 @@
                 + vrow('城市', esc(v.city||'—')) + vrow('IP', esc(v.ip||'—'))
                 + vrow('UA', esc(v.ua||'—')) + vrow('首见', fmt(v.first)+' · '+relTime(v.first))
                 + vrow('最近', fmt(v.last)+' · '+relTime(v.last)) + vrow('访问次数', cnt)
-                + '</div>' + (getGA() ? vadmrow(v.fp, v.note) : '') + '</div>';
+                + '</div>'
+                + '<div class="vp-entry"><button type="button" class="vparse-btn" data-fp="'+fp+'">详细解析</button></div>'
+                + '<div class="vparse" data-fp="'+fp+'"></div>'
+                + (getGA() ? vadmrow(v.fp, v.note) : '') + '</div>';
         } else {
           var city = v.city ? ' · ' + v.city : '';
           var ip = v.ip ? ' · ' + v.ip : '';
@@ -1545,11 +1535,56 @@
                 + '<span class="vright"><span class="vtag '+vv.cls+'">'+vv.txt+'</span><span class="vc">×'+cnt+'</span></span></div>'
                 + '<div class="vmeta"><span class="ml1">'+esc(gpu)+esc(city)+esc(ip)+'</span>'
                 + '<span class="ml2">'+esc(ua)+'</span>'
-                + '<span class="ml3">最近 '+relTime(v.last)+' · 首见 '+relTime(v.first)+'</span></div>' + (getGA() ? vadmrow(v.fp, v.note) : '') + '</div>';
+                + '<span class="ml3">最近 '+relTime(v.last)+' · 首见 '+relTime(v.first)+'</span></div>'
+                + '<div class="vp-entry"><button type="button" class="vparse-btn" data-fp="'+fp+'">详细解析</button></div>'
+                + '<div class="vparse" data-fp="'+fp+'"></div>'
+                + (getGA() ? vadmrow(v.fp, v.note) : '') + '</div>';
         }
       });
       box.innerHTML = html;
     }
+
+    // 「详细解析」：事件委托 + 懒渲染（点开时才解析，避免每次重排都跑一遍）
+    (function(){
+      var vlist = document.getElementById('vList');
+      if(!vlist) return;
+      vlist.addEventListener('click', function(e){
+        var btn = e.target.closest('.vparse-btn');
+        if(btn){
+          e.stopPropagation();
+          var fp = btn.getAttribute('data-fp');
+          var card = btn.closest('.vcard');
+          var box = card ? card.querySelector('.vparse') : null;
+          if(!box) return;
+          if(box.classList.contains('open')){
+            box.classList.remove('open'); btn.classList.remove('on'); btn.textContent = '详细解析';
+          } else {
+            if(!box.getAttribute('data-done')){
+              var v = null;
+              for(var i=0;i<diagVisitors.length;i++){ if(diagVisitors[i].fp === fp){ v = diagVisitors[i]; break; } }
+              box.innerHTML = (window.VisitorParse && v) ? window.VisitorParse.render(v) : '<div class="vp-sec"><div class="vp-h">解析不可用</div><p class="vp-overview">解析模块未加载，请刷新页面重试。</p></div>';
+              box.setAttribute('data-done','1');
+            }
+            box.classList.add('open'); btn.classList.add('on'); btn.textContent = '收起解析';
+          }
+          return;
+        }
+        var cp = e.target.closest('.vp-copy');
+        if(cp){
+          e.stopPropagation();
+          var blk = cp.closest('.vp-raw-block');
+          var pre = blk ? blk.querySelector('pre') : null;
+          var txt = pre ? pre.textContent : '';
+          var ok = function(){ cp.textContent = '已复制'; setTimeout(function(){ cp.textContent = '复制'; }, 1200); };
+          if(navigator.clipboard && navigator.clipboard.writeText){
+            navigator.clipboard.writeText(txt).then(ok).catch(function(){});
+          } else {
+            var ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0';
+            document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); ok(); }catch(err){} ta.remove();
+          }
+        }
+      });
+    })();
 
     /* ── 站长：访客备注 + 合并（仅在本机存了 ADMIN_TOKEN 时显示）── */
     function getGA(){ try{ return localStorage.getItem('gadmin-token') || ''; }catch(e){ return ''; } }
@@ -1793,87 +1828,5 @@
 
 <script src="/gallery/gallery.js" defer></script>
 <script src="/router.js"></script>
-
-<!-- 温暖的雪夜 —— 落雪动画（纯装饰，不联网取数据） -->
-<script>
-(function () {
-  'use strict';
-  var cv = document.getElementById('snowFx');
-  if (!cv) return;
-  var ctx = cv.getContext('2d');
-  if (!ctx) return;
-  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var flakes = [], raf = 0, W = 1, H = 1;
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-  function mkFlake(anyY) {
-    return {
-      x: Math.random() * W,
-      y: anyY ? Math.random() * H : -8,
-      r: 0.6 + Math.random() * 1.7,
-      sp: 0.25 + Math.random() * 0.8,
-      dx: (Math.random() - 0.5) * 0.35,
-      ph: Math.random() * Math.PI * 2,
-      a: 0.25 + Math.random() * 0.6
-    };
-  }
-  function size() {
-    var r = cv.getBoundingClientRect();
-    W = Math.max(1, r.width | 0); H = Math.max(1, r.height | 0);
-    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    var n = Math.max(40, Math.min(110, Math.round(W / 9)));
-    flakes = [];
-    for (var i = 0; i < n; i++) flakes.push(mkFlake(true));
-  }
-  // 靠近暖光窗的雪被染成暖色
-  function warmAt(x, y) {
-    var wx = W - W * 0.22 - 39, wy = H * 0.24 + 48;
-    var dx = x - wx, dy = y - wy;
-    return (dx * dx + dy * dy) < 150 * 150;
-  }
-  function paint() {
-    for (var i = 0; i < flakes.length; i++) {
-      var f = flakes[i];
-      ctx.beginPath();
-      ctx.arc(f.x, f.y, f.r, 0, 6.2832);
-      ctx.fillStyle = warmAt(f.x, f.y)
-        ? 'rgba(255,206,150,' + (f.a * 0.95).toFixed(3) + ')'
-        : 'rgba(220,231,255,' + (f.a * 0.8).toFixed(3) + ')';
-      ctx.fill();
-    }
-  }
-  function frame() {
-    ctx.clearRect(0, 0, W, H);
-    for (var i = 0; i < flakes.length; i++) {
-      var f = flakes[i];
-      f.y += f.sp;
-      f.x += f.dx + Math.sin((f.ph += 0.02)) * 0.25;
-      if (f.y > H + 6) { f.y = -6; f.x = Math.random() * W; }
-      if (f.x < -6) f.x = W + 6; else if (f.x > W + 6) f.x = -6;
-    }
-    paint();
-    raf = requestAnimationFrame(frame);
-  }
-  function still() { ctx.clearRect(0, 0, W, H); paint(); }
-
-  size();
-  if (reduce) still(); else frame();
-
-  // 滚出视口就暂停，省电
-  if ('IntersectionObserver' in window) {
-    new IntersectionObserver(function (es) {
-      var vis = es[0] && es[0].isIntersecting;
-      if (vis && !reduce && !raf) { raf = requestAnimationFrame(frame); }
-      else if (!vis && raf) { cancelAnimationFrame(raf); raf = 0; }
-    }, { threshold: 0.01 }).observe(cv);
-  }
-  var rt;
-  window.addEventListener('resize', function () {
-    clearTimeout(rt);
-    rt = setTimeout(function () { size(); if (reduce) still(); }, 150);
-  });
-})();
-</script>
 </body>
 </html>
