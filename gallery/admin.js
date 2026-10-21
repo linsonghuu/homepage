@@ -53,7 +53,13 @@
     el.appendChild(meta); el.appendChild(ct); el.appendChild(acts);
     return el;
   }
-  function setStatus(c,status){ api('/admin/set',{photo:c.photo,id:c.id,status:status}).then(function(d){ if(d&&d.ok) load(); }); }
+  function setStatus(c,status){
+    // 删除必须走 action:'delete'：Worker 的 status 白名单只认 hidden/pending/published，
+    // 传 status:'delete' 会命中「未知状态→保持原值」并返回 ok:true，看似成功实则没删。
+    var body = { photo:c.photo, id:c.id };
+    if(status==='delete') body.action='delete'; else body.status=status;
+    api('/admin/set',body).then(function(d){ if(d&&d.ok) load(); });
+  }
   $('#aTabs').addEventListener('click',function(e){ var b=e.target.closest('.a-tab'); if(!b)return; filter=b.dataset.f;
     document.querySelectorAll('.a-tab').forEach(function(x){ x.classList.toggle('on',x===b); }); load(); });
   var t=tok(); if(t){ TOKEN=t; api('/admin/comments?filter=all',{}).then(function(d){ if(d&&d.ok) showPanel(true); }); }
