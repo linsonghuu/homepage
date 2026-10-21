@@ -105,3 +105,40 @@
   .diag .vtag.ok{opacity:.6;border-color:rgba(255,255,255,.16)}
   .diag .vtag.warn{opacity:.85;border-color:rgba(255,200,120,.4);color:rgba(255,200,120,.95)}
   .diag .vtag.bad{opacity:.9;border-color:rgba(255,150,150,.45);color:rgba(255,150,150,.95)}
+
+/* ── 访客信息「详细解析」 ── */
+.diag .vp-entry{margin-top:9px;display:flex;gap:8px}
+.diag .vparse-btn{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;padding:5px 11px;border-radius:16px;cursor:pointer;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);color:#e6e6e6;transition:background .15s,border-color .15s,color .15s}
+.diag .vparse-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.3);color:#fff}
+.diag .vparse-btn.on{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.34);color:#fff}
+.diag .vparse{display:none;margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,.09)}
+.diag .vparse.open{display:block}
+.diag .vp-sec{margin-bottom:14px}
+.diag .vp-sec:last-child{margin-bottom:0}
+.diag .vp-h{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;opacity:.5;margin-bottom:7px;display:flex;align-items:center;gap:8px}
+.diag .vp-h::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.08)}
+.diag .vp-overview{font-size:12px;line-height:1.7;opacity:.85;margin:0}
+.diag .vp-rows{display:flex;flex-direction:column;gap:6px}
+.diag .vp-row{display:flex;gap:10px;font-size:12px;line-height:1.55;align-items:baseline}
+.diag .vp-k{flex:none;width:86px;opacity:.5;font-size:11px}
+.diag .vp-v{flex:1;min-width:0;word-break:break-word;font-family:var(--mono);font-size:11.5px;opacity:.95}
+.diag .vp-note{font-size:10px;line-height:1.5;opacity:.4;margin:1px 0 4px 96px}
+.diag .vp-c{font-style:normal;font-family:var(--mono);font-size:8.5px;letter-spacing:.04em;padding:1px 6px;border-radius:10px;border:1px solid rgba(255,255,255,.16);opacity:.7;white-space:nowrap;margin-left:4px}
+.diag .vp-c.cf-ok{color:#9ee0a8;border-color:rgba(140,220,160,.35);background:rgba(80,200,120,.10)}
+.diag .vp-c.cf-mid{color:#f0c98a;border-color:rgba(240,200,120,.35);background:rgba(240,190,90,.10)}
+.diag .vp-c.cf-no{color:#b9b9b9;border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.04)}
+.diag .vp-cross{margin:0;padding-left:16px;font-size:11.5px;line-height:1.65;opacity:.8}
+.diag .vp-cross li{margin-bottom:4px}
+.diag .vp-raw{margin-top:12px;border:1px dashed rgba(255,255,255,.14);border-radius:9px;padding:8px 10px}
+.diag .vp-raw summary{cursor:pointer;font-family:var(--mono);font-size:10px;letter-spacing:.04em;opacity:.55;outline:none}
+.diag .vp-raw summary:hover{opacity:.85}
+.diag .vp-raw-block{margin-top:10px}
+.diag .vp-raw-h{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:9.5px;opacity:.5;margin-bottom:4px;font-family:var(--mono)}
+.diag .vp-copy{font-family:var(--mono);font-size:9.5px;padding:2px 8px;border-radius:10px;cursor:pointer;border:1px solid rgba(255,255,255,.16);background:transparent;color:#ddd;opacity:.8}
+.diag .vp-copy:hover{background:rgba(255,255,255,.1);opacity:1}
+.diag .vp-pre{margin:0;padding:9px 10px;border-radius:7px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.06);font-family:var(--mono);font-size:10px;line-height:1.55;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow:auto;scrollbar-width:thin}
+@media (max-width:520px){
+  .diag .vp-row{flex-direction:column;gap:2px}
+  .diag .vp-k{width:auto;font-size:10px;opacity:.42}
+  .diag .vp-note{margin-left:0}
+}
