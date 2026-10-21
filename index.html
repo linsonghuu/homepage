@@ -1239,6 +1239,9 @@
     if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); sayQuip(); }
   });
   window.__playerInited = true;
+  // 标记「首页内联初始化脚本已执行」：router 用它判断能否走 SPA 回主页。
+  // 若当前 JS 上下文是从图片页刷新的，首页脚本没跑过，回主页必须整页加载，否则门/时钟/留言板都不会初始化。
+  window.__homeInited = true;
 </script>
 
 <script>
