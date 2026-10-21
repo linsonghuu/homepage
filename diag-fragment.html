@@ -1,0 +1,50 @@
+<!-- 隐藏访客信息面板：在任意位置连续键入 "diag" 即可开关，不请求任何权限 -->
+<div class="diag" id="diag" role="dialog" aria-label="访客信息" aria-hidden="true">
+  <div class="panel">
+    <div class="phead">
+      <h3>访客面板 · Visitors<span class="x" id="diagClose" title="关闭">×</span></h3>
+      <span class="pbadge" id="diagBadge">—</span>
+      <button class="ptoggle" id="diagExplain" title="解释每项信息的含义，并把访客信息展开为完整字段">说明</button>
+    </div>
+    <p class="note">以下为浏览器在不请求任何权限（无定位 / 摄像头 / 通讯录等弹窗）的前提下，可直接读取的信息。仅你本人输入口令可见，访客无感。本站会汇总所有访客的匿名设备指纹与大致地理位置用于统计（经 Cloudflare Worker，不申请任何权限），数据仅站长可见。</p>
+    <div class="grp"><div class="gt">全部访客 / All Visitors</div>
+      <div id="gAll" class="gall">
+        <div class="vbar">
+          <span class="vstat" id="vStat">—</span>
+          <span class="vseg" id="vSort">
+            <button data-sort="recent" class="on">最近</button>
+            <button data-sort="count">次数</button>
+          </span>
+          <span class="vseg" id="vVerdict">
+            <button data-v="all" class="on">全部</button>
+            <button data-v="human">真人</button>
+            <button data-v="bot">机器人</button>
+          </span>
+          <input class="vsearch" id="vSearch" type="text" placeholder="搜索：指纹 / GPU / 城市 / IP / UA…" autocomplete="off">
+        </div>
+        <div class="snap" id="vSnap"></div>
+        <div class="vadmin" id="vAdmin">
+          <div class="va-row"><span class="va-l">站长令牌</span><input id="vaTok" type="password" placeholder="填 ADMIN_TOKEN 解锁备注/合并" autocomplete="off"><span class="va-hint">仅存本机，普通访客无此面板</span></div>
+          <div class="va-row"><span class="va-l">合并访客</span><input id="vaFrom" placeholder="来源指纹" autocomplete="off"><span class="va-arrow">→</span><input id="vaInto" placeholder="目标指纹" autocomplete="off"><button id="vaMerge">合并</button><span class="va-msg" id="vaMsg"></span></div>
+          <div class="va-row"><span class="va-l">清空</span><button id="vaClear" class="va-danger">清空全部访客</button><span class="va-hint">删除所有访客记录与备注（不可恢复，会同步到快照）</span></div>
+        </div>
+        <div class="vlist" id="vList"><span class="muted">未配置后端或尚未加载</span></div>
+      </div>
+    </div>
+    <details class="selfbox">
+      <summary>本机信息 / This Device <span class="ssub">（点击展开）</span></summary>
+      <div class="selfbody">
+        <div class="fid"><span class="fl">访客指纹 ID</span><span class="fv" id="fpId">—</span></div>
+        <div class="grp"><div class="gt">身份 / Identity</div><div id="gIdentity"></div></div>
+        <div class="grp"><div class="gt">硬件 / Hardware</div><div id="gHardware"></div></div>
+        <div class="grp"><div class="gt">屏幕 / Screen</div><div id="gScreen"></div></div>
+        <div class="grp"><div class="gt">网络 / Network</div><div id="gNetwork"></div></div>
+        <div class="grp"><div class="gt">指纹 / Fingerprint</div><div id="gFinger"></div></div>
+      </div>
+    </details>
+    <div class="acts">
+      <div class="re" id="diagRefresh">↻ 刷新</div>
+      <div class="re" id="diagCopy">⧉ 复制全部</div>
+    </div>
+  </div>
+</div>
