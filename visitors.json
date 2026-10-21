@@ -1,7 +1,7 @@
 {
   "ok": true,
   "total": 115,
-  "unique": 3,
+  "unique": 2,
   "visitors": [
     {
       "fp": "7a81898d",
@@ -28,20 +28,7 @@
       "count": 1,
       "verdict": "human",
       "webdriver": false
-    },
-    {
-      "fp": "35833bbf",
-      "ua": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36",
-      "platform": "Linux armv8l",
-      "gpu": "n/a",
-      "ip": "2a03:2880:ff:3::",
-      "city": "Prineville · US",
-      "first": 1792575962557,
-      "last": 1792575962557,
-      "count": 1,
-      "verdict": "human",
-      "webdriver": false
     }
   ],
-  "syncedAt": 1792580349456
+  "syncedAt": 1792580402785
 }
