@@ -20,6 +20,10 @@
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
   function relTime(ts){ if(!ts) return ''; var s=Math.floor((Date.now()-ts)/1000); if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; if(s<86400*30)return Math.floor(s/86400)+'d ago'; return new Date(ts).toLocaleDateString('zh-CN'); }
   function fp(){ try{ var f=localStorage.getItem('home-fp'); if(!f){ f=(Math.random().toString(16).slice(2,10)); localStorage.setItem('home-fp',f);} return f; }catch(e){ return 'anon'; } }
+  // 站长令牌：后台页存 sessionStorage，diag 面板存 localStorage；两者任一存在即显示「删除」
+  function adminTok(){
+    try { return sessionStorage.getItem('admin-token') || localStorage.getItem('gadmin-token') || ''; } catch(e){ return ''; }
+  }
 
   function load() {
     return fetch('/gallery/gallery.json', { cache: 'no-cache' })
@@ -29,6 +33,7 @@
   }
 
   // ---- 图片辅助防护：禁右键 / 禁拖拽 / 禁选中 ----
+  // 说明：user-drag / user-select 样式统一放在 gallery.css，避免运行时往 head 注入 <style>。
   function protect() {
     if (protectDone) return; protectDone = true;
     document.addEventListener('contextmenu', function (e) {
@@ -37,9 +42,6 @@
     document.addEventListener('dragstart', function (e) {
       if (e.target && e.target.tagName === 'IMG') e.preventDefault();
     });
-    var style = document.createElement('style');
-    style.textContent = '.card img,.photo-stage img,.lb-stage img{-webkit-user-drag:none;user-drag:none;user-select:none;-webkit-user-select:none;pointer-events:auto}';
-    document.head.appendChild(style);
   }
 
   var LB = (function () {
@@ -97,7 +99,7 @@
       if(navigator.share){ navigator.share({title:(it.title||'Photo')+' · Gallery',text:it.title||'',url:url}).catch(function(){}); }
       else copy(url,'Link copied'); }
     function toComments(){ var id=cur[idx].id; close(); if(isPhoto()){ var el=document.getElementById('comments'); if(el) el.scrollIntoView({behavior:'smooth'}); } else if(window.SPA){ window.SPA.navigate('/gallery/'+id+'/#comments'); } else { location.href='/gallery/'+id+'/#comments'; } }
-    function close(){ if(!root) return; root.classList.remove('show'); root.setAttribute('aria-hidden','true'); document.body.style.overflow=''; img.src=''; }
+    function close(){ if(!root) return; root.classList.remove('show'); root.setAttribute('aria-hidden','true'); document.body.style.overflow=''; img.removeAttribute('src'); }
     // 离开 gallery/photo 页时销毁：Lightbox 挂在 body（#view 之外），其样式在 gallery.css；
     // 若不销毁，返回主页后 gallery.css 被 router 移除 → Lightbox 丢失 display:none 变成裸块。
     function destroy(){
@@ -160,14 +162,17 @@
   var Cmt = (function () {
     var pid='', page=0, per=6, total=0, list=[];
     function fetchList(reset){
-      if(reset){ page=0; list=[]; }
+      if(reset){ page=0; list=[]; var b0=$('#cList'); if(b0) b0.innerHTML='<div class="c-loading">加载评论…</div>'; }
       return fetch(WORKER+'/comments?photo='+encodeURIComponent(pid)+'&page='+page+'&size='+per)
         .then(function(r){return r.json();})
         .then(function(d){
-          if(!d||!d.ok) return;
+          if(!d||!d.ok) throw new Error('bad');
           total=d.total||0; (d.comments||[]).forEach(function(c){ list.push(c); });
           render();
-        }).catch(function(){});
+        }).catch(function(){
+          var box=$('#cList');
+          if(box && !list.length) box.innerHTML='<div class="c-empty">评论加载失败（后端不可达，国内可能需要梯子）</div>';
+        });
     }
     function node(text){ return document.createTextNode(text); }
     function linkify(text, parent){ // 安全：文本走 textContent，URL 仅 http/https 才转 <a>
@@ -181,6 +186,24 @@
       if(last<text.length) frag.appendChild(node(text.slice(last)));
       return frag;
     }
+    // 站长删除：删一级评论时连同其回复一起删（回复是独立 KV 键，不删会留下孤儿数据）
+    function delComment(c, btn){
+      var tok = adminTok(); if(!tok) return;
+      if(!confirm(c.parentId ? '删除这条回复？' : '删除这条评论？（其下的回复也会一起删除）')) return;
+      btn.disabled = true; btn.textContent = '…';
+      var ids = [c.id];
+      if(!c.parentId){ list.forEach(function(x){ if(x.parentId === c.id) ids.push(x.id); }); }
+      Promise.all(ids.map(function(id){
+        return fetch(WORKER + '/admin/set?token=' + encodeURIComponent(tok), {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ photo: pid, id: id, status: 'delete' })
+        }).then(function(r){ return r.json(); }).catch(function(){ return { ok:false }; });
+      })).then(function(rs){
+        var okAll = rs.every(function(d){ return d && d.ok; });
+        if(okAll){ LB.toast('已删除'); fetchList(true); }
+        else { btn.disabled = false; btn.textContent = '删除'; LB.toast('删除失败（令牌无效？）'); }
+      });
+    }
     function item(c){
       var el=document.createElement('div'); el.className='c-item'+(c.owner?' owner':'');
       var head=document.createElement('div'); head.className='c-head';
@@ -189,23 +212,36 @@
       if(c.owner){ var b=document.createElement('span'); b.className='c-badge'; b.textContent='站长'; au.appendChild(b); }
       var tm=document.createElement('span'); tm.className='c-time'; tm.textContent=relTime(c.createdAt);
       head.appendChild(av); head.appendChild(au); head.appendChild(tm);
-      var body=document.createElement('div'); body.className='c-body'
-      body.className='c-body'; body.appendChild(linkify(String(c.content||'')));
+      // 仅当本机存有站长令牌时才出现「删除」（访客看不到）
+      if(adminTok()){
+        var del=document.createElement('button');
+        del.type='button'; del.className='c-del'; del.textContent='删除';
+        del.title='删除这条评论（仅站长可见）'; del.setAttribute('aria-label','删除这条评论');
+        del.addEventListener('click', function(ev){ ev.stopPropagation(); delComment(c, del); });
+        head.appendChild(del);
+      }
+      var body=document.createElement('div'); body.className='c-body';
+      body.appendChild(linkify(String(c.content||'')));
       el.appendChild(head); el.appendChild(body);
       return el;
     }
     function render(){
-      var box=$('#cList'); if(!box) return; box.innerHTML='';
+      var box=$('#cList'); if(!box) return;
       var cnt=$('#cCount'); if(cnt) cnt.textContent=String(total);
-      var top=list.filter(function(c){ return !c.parentId; });
-      top.forEach(function(c){
-        box.appendChild(item(c));
-        var replies=list.filter(function(r){ return r.parentId===c.id; });
-        replies.forEach(function(r){ var el=item(r); el.classList.add('reply'); box.appendChild(el); });
+      // 一次遍历分组（O(n²) → O(n)），并用 DocumentFragment 减少重排
+      var tops=[], replies={};
+      list.forEach(function(c){
+        if(!c.parentId) tops.push(c);
+        else (replies[c.parentId] = replies[c.parentId] || []).push(c);
       });
+      var frag=document.createDocumentFragment();
+      tops.forEach(function(c){
+        frag.appendChild(item(c));
+        (replies[c.id]||[]).forEach(function(r){ var el=item(r); el.classList.add('reply'); frag.appendChild(el); });
+      });
+      box.innerHTML=''; box.appendChild(frag);
       var more=$('#cMore');
       if(more){ var hasMore=list.length<total; more.hidden=!hasMore; more.textContent='Load more'; }
-      var none=document.querySelector('.c-empty'); if(none) none.remove();
       if(total===0){ var em=document.createElement('div'); em.className='c-empty'; em.textContent='No comments yet — leave the first one.'; box.appendChild(em); }
     }
     function submit(name,text,hp){
@@ -218,6 +254,7 @@
         .then(function(r){return r.json();}).then(function(d){
           btn.disabled=false;
           if(d && d.ok){
+            try { localStorage.setItem('comment-name', name); } catch(e){}   // 记住昵称，下次自动填
             if(d.status==='pending'){ if(msg) msg.textContent='Submitted — awaiting review.'; }
             else { if(msg) msg.textContent='Posted ✓'; }
             $('#cText').value=''; return fetchList(true);
@@ -225,13 +262,23 @@
         }).catch(function(){ btn.disabled=false; if(msg) msg.textContent='Network error.'; });
     }
     function init(){
-      pid=document.body.dataset.photoId||'';
+      var nameEl=$('#cName');
+      try { var saved=localStorage.getItem('comment-name'); if(saved && nameEl && !nameEl.value) nameEl.value=saved; } catch(e){}
       var form=$('#cForm'); if(form) form.addEventListener('submit',function(e){ e.preventDefault();
         submit($('#cName').value.trim(), $('#cText').value, $('#cHoneypot').value); });
-      var more=$('#cMore'); if(more) more.addEventListener('click',function(){ page++; fetchList(false); });
+      var more=$('#cMore'); if(more) more.addEventListener('click',function(){
+        if(more.disabled) return;
+        more.disabled=true; page++;
+        fetchList(false).then(function(){ more.disabled=false; });
+      });
+      load(document.body.dataset.photoId||'');
+    }
+    // 切换图片（Lightbox 上一张/下一张）时刷新评论区
+    function load(photoId){
+      pid = photoId || document.body.dataset.photoId || '';
       fetchList(true);
     }
-    return { init:init };
+    return { init:init, load:load };
   })();
 
   function initPhoto() {
@@ -241,6 +288,7 @@
     function res(x){ return x.width ? (x.width + ' × ' + x.height) : ''; }
     window.paintPhoto = function (x) {
       document.body.dataset.photoId = x.id;
+      Cmt.load(x.id);   // Lightbox 切图后同步刷新评论区（否则会停留在上一张的评论）
       img.src = x.display || x.thumbnail; img.alt = x.title || '';
       $('.p-title').textContent = x.title || '';
       $('.p-cat').textContent = x.category || '';
