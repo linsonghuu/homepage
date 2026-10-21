@@ -213,10 +213,10 @@
         '<div class="ov"><div class="ovt">'+hl(it.title)+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
     }
     function bindImgLoad(root){
-      var imgs=root.querySelectorAll('.card img');
+      var imgs=root.querySelectorAll('.card img, .feat-ph img');
       for(var j=0;j<imgs.length;j++){ (function(im){
         function on(){im.classList.add('loaded');}
-        function err(){ im.classList.add('loaded','imgerr'); var ph=im.closest('.ph'); if(ph) ph.classList.add('imgerr'); }
+        function err(){ im.classList.add('loaded','imgerr'); var ph=im.closest('.ph')||im.closest('.feat-ph'); if(ph) ph.classList.add('imgerr'); }
         if(im.complete){ im.naturalWidth ? on() : err(); }
         else { im.addEventListener('load',on); im.addEventListener('error',err); }
       })(imgs[j]); }
@@ -228,7 +228,25 @@
     function renderGrid(list){
       grid.className='grid';
       if(!list.length){ grid.innerHTML=emptyHtml(); return; }
-      grid.innerHTML=list.map(function(it,i){ return cardHtml(it,i); }).join('');
+      var html='', offset=0;
+      // 最新一张做成大图 hero（至少 3 张时才用，太少会显得空）；宽度按 60vh×宽高比，竖图也不会过宽
+      if(list.length >= 3){
+        var f=list[0];
+        var ar=(f.width&&f.height)?(f.width/f.height):1.7778;
+        var fstyle=(f.width&&f.height)?('aspect-ratio:'+f.width+'/'+f.height):'aspect-ratio:16/9';
+        var fsrc=(f.displaySm&&f.display)?(' srcset="'+f.displaySm+' 1280w, '+f.display+' 1920w" sizes="(max-width: 900px) 100vw, calc(60vh * '+ar.toFixed(3)+')"'):'';
+        html+='<div class="feat" data-i="0" role="button" tabindex="0" aria-label="'+esc(f.title||'')+'" style="--ar:'+ar.toFixed(4)+'">'
+          +'<div class="feat-ph" style="'+fstyle+'"><img src="'+esc(f.display||f.thumbnail)+'"'+fsrc+' alt="'+esc(f.title||'')+'" loading="eager" fetchpriority="high" decoding="async"></div>'
+          +'<span class="feat-tag">最新</span>'
+          +'<div class="feat-ov"><div class="feat-t">'+esc(f.title||'')+'</div>'
+          +(f.description?'<div class="feat-d">'+esc(f.description)+'</div>':'')
+          +'<div class="feat-m">'+esc([f.category,f.date].filter(Boolean).join(' · '))+'</div></div>'
+          +'</div>';
+        offset=1;
+      }
+      var rest=list.slice(offset);
+      if(rest.length) html+='<div class="cards">'+rest.map(function(it,i){ return cardHtml(it,i+offset); }).join('')+'</div>';
+      grid.innerHTML=html;
       bindImgLoad(grid);
     }
     // 时间线：按日期分组（新的在上），竖线 + 圆点
@@ -256,7 +274,9 @@
       });
       VIEW=list; renderCats(); syncViews();
       if(gview==='timeline') renderTimeline(list); else renderGrid(list);
-      if(gcount) gcount.textContent=list.length+' 张'+(list.length!==DATA.length?(' / '+DATA.length):'');
+      var dn={}; list.forEach(function(it){ if(it.date) dn[it.date]=1; });
+      var dcount=Object.keys(dn).length;
+      if(gcount) gcount.textContent=list.length+' 张'+(dcount?(' · '+dcount+' 个日期'):'')+(list.length!==DATA.length?(' / '+DATA.length):'');
     }
     function renderCats(){
       var set=['All'], counts={All:DATA.length};
@@ -282,8 +302,18 @@
       e.preventDefault();
       var s=document.getElementById('gsearch'); if(s) s.focus();
     });
-    grid.addEventListener('click',function(e){ var c=e.target.closest('.card'); if(!c)return; LB.open(VIEW,+c.dataset.i); });
-    grid.addEventListener('keydown',function(e){ if(e.key!=='Enter'&&e.key!==' ')return; var c=e.target.closest('.card'); if(!c)return; e.preventDefault(); LB.open(VIEW,+c.dataset.i); });
+    grid.addEventListener('click',function(e){ var c=e.target.closest('.card, .feat'); if(!c)return; LB.open(VIEW,+c.dataset.i); });
+    grid.addEventListener('keydown',function(e){
+      var c=e.target.closest('.card, .feat');
+      if(e.key==='Enter'||e.key===' '){ if(!c) return; e.preventDefault(); LB.open(VIEW,+c.dataset.i); return; }
+      if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft'&&e.key!=='ArrowDown'&&e.key!=='ArrowUp') return;
+      // 方向键在卡片间移动焦点（Enter 打开）
+      var cards=Array.prototype.slice.call(grid.querySelectorAll('.card, .feat'));
+      var i=cards.indexOf(document.activeElement);
+      if(i<0) return;
+      var n=cards[i+((e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1)];
+      if(n){ e.preventDefault(); n.focus(); }
+    });
     if(tag) st.tag=tag; apply();
   }
 
