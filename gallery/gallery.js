@@ -163,7 +163,8 @@
     var pid='', page=0, per=6, total=0, list=[];
     function fetchList(reset){
       if(reset){ page=0; list=[]; var b0=$('#cList'); if(b0) b0.innerHTML='<div class="c-loading">加载评论…</div>'; }
-      return fetch(WORKER+'/comments?photo='+encodeURIComponent(pid)+'&page='+page+'&size='+per)
+      // 加 t 参数 + no-store：避免删除后重新拉取仍命中浏览器/中间缓存，看到“删了还在”
+      return fetch(WORKER+'/comments?photo='+encodeURIComponent(pid)+'&page='+page+'&size='+per+'&t='+Date.now(), { cache:'no-store' })
         .then(function(r){return r.json();})
         .then(function(d){
           if(!d||!d.ok) throw new Error('bad');
@@ -195,14 +196,23 @@
       if(!c.parentId){ list.forEach(function(x){ if(x.parentId === c.id) ids.push(x.id); }); }
       Promise.all(ids.map(function(id){
         return fetch(WORKER + '/admin/set?token=' + encodeURIComponent(tok), {
-          method:'POST', headers:{'Content-Type':'application/json'},
+          method:'POST', headers:{'Content-Type':'application/json'}, cache:'no-store',
           // Worker 的删除分支只认 action:'delete'（status 白名单只有 hidden/pending/published）
           body: JSON.stringify({ photo: pid, id: id, action: 'delete', status: 'delete' })
-        }).then(function(r){ return r.json(); }).catch(function(){ return { ok:false }; });
+        }).then(function(r){ return r.json(); }).catch(function(){ return { ok:false, err:'network' }; });
       })).then(function(rs){
-        var okAll = rs.every(function(d){ return d && d.ok; });
-        if(okAll){ LB.toast('已删除'); fetchList(true); }
-        else { btn.disabled = false; btn.textContent = '删除'; LB.toast('删除失败（令牌无效？）'); }
+        var bad = rs.filter(function(d){ return !d || !d.ok; });
+        if(bad.length){
+          btn.disabled = false; btn.textContent = '删除';
+          var e = bad[0] && bad[0].err;
+          LB.toast('删除失败：' + (e === 'forbidden' ? '令牌无效/无权限' : (e || '未知错误')));
+          return;
+        }
+        // 回读校验：确认真的从后端消失了，避免“提示成功但其实没删”
+        return fetchList(true).then(function(){
+          var still = list.some(function(x){ return x.id === c.id; });
+          LB.toast(still ? '删除未生效（请 Ctrl+F5 强刷后重试）' : '已删除');
+        });
       });
     }
     function item(c){
