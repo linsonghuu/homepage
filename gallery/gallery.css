@@ -11,6 +11,7 @@ body{
   min-height:100dvh;background:var(--bg);color:var(--ink);
   font-family:var(--sans);font-size:15px;letter-spacing:.012em;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
+  padding-bottom:clamp(140px,20vh,190px); /* 给底部固定播放器腾出空间 */
 }
 
 /* ── 顶栏 ── */
