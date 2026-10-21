@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /gallery/admin/
+
+Sitemap: https://linsonghuu.github.io/sitemap.xml
