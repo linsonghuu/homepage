@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "total": 137,
+  "total": 138,
   "unique": 3,
   "visitors": [
     {
@@ -11,14 +11,14 @@
       "ip": "67.159.48.147",
       "city": "Singapore · SG",
       "first": 1792480590766,
-      "last": 1792584869101,
-      "count": 125,
+      "last": 1792586279486,
+      "count": 126,
       "verdict": "human",
       "webdriver": false,
       "asn": 30058,
       "org": "FDCservers.net",
       "tz": "Asia/Singapore",
-      "colo": "MRS"
+      "colo": "CDG"
     },
     {
       "fp": "69ca45ae",
@@ -53,5 +53,5 @@
       "webdriver": false
     }
   ],
-  "syncedAt": 1792585878690
+  "syncedAt": 1792586279684
 }
