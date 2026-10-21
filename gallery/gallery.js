@@ -196,7 +196,8 @@
       Promise.all(ids.map(function(id){
         return fetch(WORKER + '/admin/set?token=' + encodeURIComponent(tok), {
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({ photo: pid, id: id, status: 'delete' })
+          // Worker 的删除分支只认 action:'delete'（status 白名单只有 hidden/pending/published）
+          body: JSON.stringify({ photo: pid, id: id, action: 'delete', status: 'delete' })
         }).then(function(r){ return r.json(); }).catch(function(){ return { ok:false }; });
       })).then(function(rs){
         var okAll = rs.every(function(d){ return d && d.ok; });
