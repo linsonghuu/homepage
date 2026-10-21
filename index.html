@@ -212,15 +212,17 @@
   .about  {grid-area:about}
   .time   {grid-area:time}
   .links  {grid-area:links}
-  .weather{grid-area:weather}
-  .birthday{grid-area:birthday}
+.weather{grid-area:weather}
+.birthday{grid-area:birthday}
+.snow{grid-area:snow}
 
   .bento{
     display:grid;
     grid-template-columns:repeat(3,1fr);
     grid-template-areas:
       "profile about birthday"
-      "time    links weather";
+      "time    links weather"
+      "snow    snow    snow";
     gap:11px;
   }
 
@@ -268,6 +270,50 @@
     .cell:hover::after{opacity:1}
   }
   .cell:hover{border-color:#2e2e2e}
+
+  /* ── 温暖的雪夜（通栏氛围卡）── */
+  .snow{
+    position:relative;
+    overflow:hidden;
+    display:block;
+    text-align:left;
+    padding:0;
+    min-height:210px;
+    background:
+      radial-gradient(120% 92% at 76% 20%, rgba(255,150,60,.11), transparent 58%),
+      linear-gradient(180deg,#070b14 0%,#0a0f1c 46%,#05070e 100%);
+  }
+  .snow-ground{
+    position:absolute;left:0;right:0;bottom:0;height:36%;
+    background:linear-gradient(180deg,rgba(198,214,240,.05),rgba(160,180,215,.10));
+    border-top:1px solid rgba(200,215,240,.10);
+    z-index:0;pointer-events:none;
+  }
+  .snow-window{
+    position:absolute;right:22%;top:24%;
+    width:78px;height:96px;
+    border-radius:5px;
+    background:linear-gradient(180deg,#ffd79a 0%,#ffab5e 55%,#ff9a4a 100%);
+    box-shadow:
+      0 0 0 3px rgba(20,14,8,.92),
+      0 0 60px 16px rgba(255,160,70,.40),
+      0 0 150px 46px rgba(255,150,60,.20);
+    z-index:1;
+  }
+  .snow-window::before,.snow-window::after{content:"";position:absolute;background:rgba(24,16,10,.85)}
+  .snow-window::before{left:50%;top:7%;bottom:7%;width:3px;transform:translateX(-50%)}
+  .snow-window::after{left:7%;right:7%;top:47%;height:3px}
+  .snow-pool{
+    position:absolute;right:6%;bottom:-14%;
+    width:230px;height:120px;
+    background:radial-gradient(ellipse at 50% 0%,rgba(255,175,90,.32),transparent 68%);
+    filter:blur(8px);
+    z-index:0;pointer-events:none;
+  }
+  .snow-fx{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none}
+  .snow-copy{position:absolute;left:24px;bottom:22px;z-index:3;max-width:min(58%,340px)}
+  .snow-copy .h{justify-content:flex-start}
+  .snow-line{margin-top:9px;font-size:12.5px;line-height:1.55;color:rgba(245,245,245,.6)}
 
   .h{
     display:flex;
@@ -949,7 +995,7 @@
     .bento{
       grid-template-columns:1fr;
       grid-template-areas:
-        "profile" "about" "birthday" "time" "links" "weather";
+        "profile" "about" "birthday" "time" "links" "weather" "snow";
       gap:9px;
     }
     .cell{border-radius:22px;padding:18px 15px}
@@ -1182,6 +1228,20 @@
         </div>
         <div class="copy-hint">click to copy</div>
         <a class="gdoor" href="/gallery/">Gallery ↗</a>
+      </div>
+
+      <div class="cell snow reveal" id="snowCard">
+        <span class="snow-ground" aria-hidden="true"></span>
+        <span class="snow-window" aria-hidden="true"></span>
+        <span class="snow-pool" aria-hidden="true"></span>
+        <canvas class="snow-fx" id="snowFx" aria-hidden="true"></canvas>
+        <div class="snow-copy">
+          <div class="h">
+            <svg viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/></svg>
+            温暖的雪夜
+          </div>
+          <p class="snow-line">窗外是雪，屋里还留着灯。</p>
+        </div>
       </div>
 
     </main>
@@ -2835,5 +2895,87 @@
 
 <script src="/gallery/gallery.js" defer></script>
 <script src="/router.js"></script>
+
+<!-- 温暖的雪夜 —— 落雪动画（纯装饰，不联网取数据） -->
+<script>
+(function () {
+  'use strict';
+  var cv = document.getElementById('snowFx');
+  if (!cv) return;
+  var ctx = cv.getContext('2d');
+  if (!ctx) return;
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var flakes = [], raf = 0, W = 1, H = 1;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  function mkFlake(anyY) {
+    return {
+      x: Math.random() * W,
+      y: anyY ? Math.random() * H : -8,
+      r: 0.6 + Math.random() * 1.7,
+      sp: 0.25 + Math.random() * 0.8,
+      dx: (Math.random() - 0.5) * 0.35,
+      ph: Math.random() * Math.PI * 2,
+      a: 0.25 + Math.random() * 0.6
+    };
+  }
+  function size() {
+    var r = cv.getBoundingClientRect();
+    W = Math.max(1, r.width | 0); H = Math.max(1, r.height | 0);
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var n = Math.max(40, Math.min(110, Math.round(W / 9)));
+    flakes = [];
+    for (var i = 0; i < n; i++) flakes.push(mkFlake(true));
+  }
+  // 靠近暖光窗的雪被染成暖色
+  function warmAt(x, y) {
+    var wx = W - W * 0.22 - 39, wy = H * 0.24 + 48;
+    var dx = x - wx, dy = y - wy;
+    return (dx * dx + dy * dy) < 150 * 150;
+  }
+  function paint() {
+    for (var i = 0; i < flakes.length; i++) {
+      var f = flakes[i];
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, f.r, 0, 6.2832);
+      ctx.fillStyle = warmAt(f.x, f.y)
+        ? 'rgba(255,206,150,' + (f.a * 0.95).toFixed(3) + ')'
+        : 'rgba(220,231,255,' + (f.a * 0.8).toFixed(3) + ')';
+      ctx.fill();
+    }
+  }
+  function frame() {
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < flakes.length; i++) {
+      var f = flakes[i];
+      f.y += f.sp;
+      f.x += f.dx + Math.sin((f.ph += 0.02)) * 0.25;
+      if (f.y > H + 6) { f.y = -6; f.x = Math.random() * W; }
+      if (f.x < -6) f.x = W + 6; else if (f.x > W + 6) f.x = -6;
+    }
+    paint();
+    raf = requestAnimationFrame(frame);
+  }
+  function still() { ctx.clearRect(0, 0, W, H); paint(); }
+
+  size();
+  if (reduce) still(); else frame();
+
+  // 滚出视口就暂停，省电
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (es) {
+      var vis = es[0] && es[0].isIntersecting;
+      if (vis && !reduce && !raf) { raf = requestAnimationFrame(frame); }
+      else if (!vis && raf) { cancelAnimationFrame(raf); raf = 0; }
+    }, { threshold: 0.01 }).observe(cv);
+  }
+  var rt;
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { size(); if (reduce) still(); }, 150);
+  });
+})();
+</script>
 </body>
 </html>
