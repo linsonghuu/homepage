@@ -15,7 +15,7 @@
   function login(){
     TOKEN=$('#tokInput').value.trim(); setTok(TOKEN);
     api('/admin/comments?filter=all',{}).then(function(d){
-      if(d && d.ok){ showPanel(true); load(); } else { $('#loginMsg').textContent='Token error'; }
+      if(d && d.ok){ showPanel(true); load(); loadMeta(); } else { $('#loginMsg').textContent='Token error'; }
     }).catch(function(){ $('#loginMsg').textContent='Network error'; });
   }
   $('#loginBtn').addEventListener('click', login);
@@ -60,7 +60,69 @@
     if(status==='delete') body.action='delete'; else body.status=status;
     api('/admin/set',body).then(function(d){ if(d&&d.ok) load(); });
   }
+  /* ── 图片文案编辑（大标题 / 小标题 / 分类 / 标签 / 日期）── */
+  function loadMeta(){
+    var box=$('#metaList'); if(!box) return;
+    box.innerHTML='<div class="m-msg">加载中…</div>';
+    Promise.all([
+      fetch('/gallery/gallery.json',{cache:'no-cache'}).then(function(r){return r.json();}).catch(function(){return {items:[]};}),
+      api('/gallery-meta', null)
+    ]).then(function(res){
+      var items=(res[0]&&res[0].items)||[];
+      var map=(res[1]&&res[1].ok&&res[1].meta)||{};
+      box.innerHTML='';
+      items.forEach(function(it){ box.appendChild(metaRow(it, map[it.id]||null)); });
+      if(!items.length) box.innerHTML='<div class="m-msg">暂无图片</div>';
+    }).catch(function(){ box.innerHTML='<div class="m-msg">加载失败</div>'; });
+  }
+  function metaRow(it, ov){
+    var o = ov || {};
+    var el=document.createElement('div'); el.className='m-card';
+    var id=document.createElement('div'); id.className='m-id'; id.textContent=it.id; el.appendChild(id);
+    function field(label, tag, value, ph){
+      var w=document.createElement('div'); w.className='m-field';
+      var l=document.createElement('label'); l.textContent=label;
+      var inp=document.createElement(tag); inp.value=value||''; if(ph) inp.placeholder=ph;
+      if(tag==='textarea') inp.rows=3;
+      w.appendChild(l); w.appendChild(inp); el.appendChild(w); return inp;
+    }
+    var title=field('大标题','input', o.title||it.title||'', '例如：灯海·招手');
+    var desc =field('小标题 / 描述','textarea', (o.desc!=null?o.desc:(it.description||'')), '例如：灯会夜色里，狐狸耳朵的少女抬手打招呼。');
+    var cat  =field('分类','input', o.category||it.category||'', 'VRChat');
+    var tags =field('标签（逗号分隔）','input', (o.tags||it.tags||[]).join(', '), 'vrchat, 灯会, 夜景');
+    var date =field('日期','input', o.date||it.date||'', '2026-02-04');
+    var acts=document.createElement('div'); acts.className='m-acts';
+    var save=document.createElement('button'); save.className='m-btn primary'; save.textContent='保存';
+    var reset=document.createElement('button'); reset.className='m-btn'; reset.textContent='恢复默认';
+    var msg=document.createElement('span'); msg.className='m-msg';
+    save.addEventListener('click', function(){
+      save.disabled=true; msg.textContent='保存中…';
+      api('/admin/gallery-meta', {
+        photo: it.id, title: title.value.trim(), desc: desc.value.trim(),
+        category: cat.value.trim(), date: date.value.trim(),
+        tags: tags.value.split(/[,，]/).map(function(s){return s.trim();}).filter(Boolean)
+      }).then(function(d){
+        save.disabled=false;
+        if(d && d.ok){ msg.textContent='已保存 ✓'; setTimeout(function(){ if(msg.textContent==='已保存 ✓') msg.textContent=''; }, 1800); }
+        else msg.textContent='保存失败：'+((d&&d.err)||'未知');
+      }).catch(function(){ save.disabled=false; msg.textContent='网络错误'; });
+    });
+    reset.addEventListener('click', function(){
+      if(!confirm('恢复为 gallery.json 里的默认文案？')) return;
+      api('/admin/gallery-meta', {photo: it.id, clear:true}).then(function(d){
+        if(d && d.ok){
+          msg.textContent='已恢复默认';
+          title.value=it.title||''; desc.value=it.description||''; cat.value=it.category||'';
+          tags.value=(it.tags||[]).join(', '); date.value=it.date||'';
+        } else msg.textContent='恢复失败';
+      }).catch(function(){ msg.textContent='网络错误'; });
+    });
+    acts.appendChild(save); acts.appendChild(reset); acts.appendChild(msg);
+    el.appendChild(acts);
+    return el;
+  }
+
   $('#aTabs').addEventListener('click',function(e){ var b=e.target.closest('.a-tab'); if(!b)return; filter=b.dataset.f;
     document.querySelectorAll('.a-tab').forEach(function(x){ x.classList.toggle('on',x===b); }); load(); });
-  var t=tok(); if(t){ TOKEN=t; api('/admin/comments?filter=all',{}).then(function(d){ if(d&&d.ok) showPanel(true); }); }
+  var t=tok(); if(t){ TOKEN=t; api('/admin/comments?filter=all',{}).then(function(d){ if(d&&d.ok){ showPanel(true); loadMeta(); } }); }
 })();
