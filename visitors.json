@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "total": 101,
+  "total": 106,
   "unique": 3,
   "visitors": [
     {
@@ -11,8 +11,8 @@
       "ip": "103.62.49.162",
       "city": "Tokyo · JP",
       "first": 1792480590766,
-      "last": 1792577457458,
-      "count": 88,
+      "last": 1792577842288,
+      "count": 93,
       "verdict": "human",
       "webdriver": false
     },
@@ -43,5 +43,5 @@
       "webdriver": false
     }
   ],
-  "syncedAt": 1792577458730
+  "syncedAt": 1792577843641
 }
