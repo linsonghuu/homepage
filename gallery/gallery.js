@@ -7,6 +7,7 @@
   var WORKER = 'https://linsonghuu-visitors.linsonghuu.workers.dev';
   var DATA = []; var VIEW = [];
   var st = { cat: 'All', q: '', tag: '' };
+  var gview = 'grid';   // 视图：grid | timeline（localStorage 记忆）
   var protectDone = false;
   var bootedFor = null;
   function getPage(){
@@ -61,6 +62,8 @@
   var LB = (function () {
     var root = null, stage, img, count, title, meta, desc, cur = [], idx = 0, built = false;
     var scale=1, tx=0, ty=0, pointers={}, pinchStart=null, panning=false, panStart=null;
+    var preloaded = {};
+    function preload(x){ if(!x) return; var u=x.display||x.thumbnail; if(!u||preloaded[u]) return; preloaded[u]=1; var im=new Image(); im.src=u; }
     function ensureBuilt() {
       if (built) return;
       built = true;
@@ -103,6 +106,8 @@
     function open(list,index){ ensureBuilt(); cur=list; idx=index; document.body.style.overflow='hidden';
       requestAnimationFrame(function(){ root.classList.add('show'); root.setAttribute('aria-hidden','false'); }); render(); }
     function render(){ var it=cur[idx]; resetZoom(); img.src=it.display||it.thumbnail; img.alt=it.title||'';
+      // 预加载相邻图片，下一张/上一张几乎瞬时
+      if(cur.length>1){ preload(cur[(idx+1)%cur.length]); preload(cur[(idx-1+cur.length)%cur.length]); }
       count.textContent=(idx+1)+' / '+cur.length; title.textContent=it.title||'';
       meta.textContent=[it.category,it.date,(it.width?(it.width+' x '+it.height):'')].filter(Boolean).join('  ·  ');
       desc.textContent=it.description||''; desc.style.display=it.description?'':'none';
@@ -140,8 +145,54 @@
   });
 
   function initIndex() {
-    var grid=$('#grid'), cats=$('#cats'), gcount=$('#gcount'), gsearch=$('#gsearch');
+    var grid=$('#grid'), cats=$('#cats'), gcount=$('#gcount'), gsearch=$('#gsearch'), gviews=$('#gviews');
     var tag=new URLSearchParams(location.search).get('tag');
+    try { gview = localStorage.getItem('gview') || 'grid'; } catch(e){ gview = 'grid'; }
+    function fmtDate(d){
+      var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(d||'');
+      if(!m) return d || '未标注日期';
+      return m[1] + ' 年 ' + Number(m[2]) + ' 月 ' + Number(m[3]) + ' 日';
+    }
+    function syncViews(){
+      if(!gviews) return;
+      var bs=gviews.querySelectorAll('.gv');
+      for(var i=0;i<bs.length;i++){ bs[i].classList.toggle('on', bs[i].dataset.v === gview); }
+    }
+    function cardHtml(it, i){
+      var ar=it.width&&it.height?('aspect-ratio:'+it.width+'/'+it.height):'aspect-ratio:4/3';
+      var ovm=[it.category,it.date,it.width?(it.width+'×'+it.height):''].filter(Boolean).join(' · ');
+      return '<div class="card" data-i="'+i+'" role="button" tabindex="0" aria-label="'+esc(it.title||'')+'">'+
+        '<div class="ph" style="'+ar+'"><img src="'+esc(it.thumbnail)+'" width="'+(it.width||'')+'" height="'+(it.height||'')+
+        '" alt="'+esc(it.title||'')+'" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+' decoding="async">'+
+        '<div class="ov"><div class="ovt">'+esc(it.title||'')+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
+    }
+    function bindImgLoad(root){
+      var imgs=root.querySelectorAll('.card img');
+      for(var j=0;j<imgs.length;j++){ (function(im){ function on(){im.classList.add('loaded');} if(im.complete)on(); else im.addEventListener('load',on); })(imgs[j]); }
+    }
+    function emptyHtml(){ return '<div class="empty">'+ (DATA.length?'没有匹配的图片':'还没有照片 · 去 gallery.json 添加或在管理后台上传') +'</div>'; }
+    function renderGrid(list){
+      grid.className='grid';
+      if(!list.length){ grid.innerHTML=emptyHtml(); return; }
+      grid.innerHTML=list.map(function(it,i){ return cardHtml(it,i); }).join('');
+      bindImgLoad(grid);
+    }
+    // 时间线：按日期分组（新的在上），竖线 + 圆点
+    function renderTimeline(list){
+      grid.className='tl';
+      if(!list.length){ grid.innerHTML=emptyHtml(); return; }
+      var groups={};
+      list.forEach(function(it){ var d=it.date||'未标注日期'; (groups[d]=groups[d]||[]).push(it); });
+      var keys=Object.keys(groups).sort().reverse();
+      grid.innerHTML=keys.map(function(k){
+        var items=groups[k];
+        var cards=items.map(function(it){ return cardHtml(it, list.indexOf(it)); }).join('');
+        return '<div class="tl-group"><span class="tl-dot" aria-hidden="true"></span>'+
+          '<div class="tl-date">'+esc(fmtDate(k))+'<span class="tl-n">'+items.length+' 张</span></div>'+
+          '<div class="tl-grid">'+cards+'</div></div>';
+      }).join('');
+      bindImgLoad(grid);
+    }
     function apply(){
       var list=DATA.filter(function(it){
         if(st.cat!=='All' && it.category!==st.cat) return false;
@@ -149,25 +200,20 @@
         if(st.q){ var blob=[it.title,it.category,it.id,(it.tags||[]).join(' ')].join(' ').toLowerCase(); if(blob.indexOf(st.q.toLowerCase())<0) return false; }
         return true;
       });
-      VIEW=list; renderCats(); renderGrid(list);
+      VIEW=list; renderCats(); syncViews();
+      if(gview==='timeline') renderTimeline(list); else renderGrid(list);
       if(gcount) gcount.textContent=list.length+' 张'+(list.length!==DATA.length?(' / '+DATA.length):'');
     }
     function renderCats(){ var set=['All']; DATA.forEach(function(it){ if(it.category && set.indexOf(it.category)<0) set.push(it.category); });
       cats.innerHTML=set.map(function(c){ return '<button class="cat'+(c===st.cat?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>'; }).join(''); }
-    function renderGrid(list){
-      if(!list.length){ grid.innerHTML='<div class="empty">'+ (DATA.length?'没有匹配的图片':'还没有照片 · 去 gallery.json 添加或在管理后台上传') +'</div>'; return; }
-      grid.innerHTML=list.map(function(it,i){
-        var ar=it.width&&it.height?('aspect-ratio:'+it.width+'/'+it.height):'aspect-ratio:4/3';
-        var ovm=[it.category,it.date,it.width?(it.width+'×'+it.height):''].filter(Boolean).join(' · ');
-        return '<div class="card" data-i="'+i+'" role="button" tabindex="0" aria-label="'+esc(it.title||'')+'">'+
-          '<div class="ph" style="'+ar+'"><img src="'+esc(it.thumbnail)+'" width="'+(it.width||'')+'" height="'+(it.height||'')+
-          '" alt="'+esc(it.title||'')+'" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+' decoding="async"><div class="ov"><div class="ovt">'+esc(it.title||'')+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
-      }).join('');
-      var imgs=grid.querySelectorAll('.card img');
-      for(var j=0;j<imgs.length;j++){ (function(im){ function on(){im.classList.add('loaded');} if(im.complete)on(); else im.addEventListener('load',on); })(imgs[j]); }
-    }
     cats.addEventListener('click',function(e){ var b=e.target.closest('.cat'); if(!b)return; st.cat=b.dataset.cat; st.tag=''; apply(); });
     if(gsearch) gsearch.addEventListener('input',function(){ st.q=gsearch.value.trim(); apply(); });
+    if(gviews) gviews.addEventListener('click',function(e){
+      var b=e.target.closest('.gv'); if(!b) return;
+      gview=b.dataset.v;
+      try{ localStorage.setItem('gview', gview); }catch(err){}
+      apply();
+    });
     grid.addEventListener('click',function(e){ var c=e.target.closest('.card'); if(!c)return; LB.open(VIEW,+c.dataset.i); });
     grid.addEventListener('keydown',function(e){ if(e.key!=='Enter'&&e.key!==' ')return; var c=e.target.closest('.card'); if(!c)return; e.preventDefault(); LB.open(VIEW,+c.dataset.i); });
     if(tag) st.tag=tag; apply();
