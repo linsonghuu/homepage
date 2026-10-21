@@ -147,6 +147,10 @@
     }
 
     view.dataset.page = type || '';
+    // 同步 body 的页面类（否则从图片页回主页会残留 photo-page，影响样式判断）
+    document.body.classList.remove('gallery-page', 'photo-page');
+    if (type === 'gallery') document.body.classList.add('gallery-page');
+    else if (type === 'photo') document.body.classList.add('photo-page');
     document.title = title || document.title;
     currentKey = url;
     if (view.childNodes.length) {
@@ -182,6 +186,16 @@
     }
     // 外部链接放行
     if (url.origin !== location.origin) { location.href = href; return; }
+
+    // 返回主页：首页的内联脚本（入口门 / 时钟 / 留言板）只在整页加载时执行。
+    // 若当前 JS 上下文没跑过首页脚本（典型：在图片页刷新后返回主页），必须整页加载，
+    // 否则 #view 换进来了、脚本没跑，门会盖住整屏且点不动（表现为黑屏）。
+    if (!window.__homeInited && (url.pathname === '/' || url.pathname === '/index.html')) {
+      // 用户已经在站内（图片页/画廊页），回主页不必再过入口门 → 标记已进入，首页脚本会自动进门
+      try { sessionStorage.setItem('home-entered', '1'); } catch (e) {}
+      location.href = url.href;
+      return;
+    }
 
     if (push !== false) history.pushState({ spa: 1, href: href }, '', href);
 
