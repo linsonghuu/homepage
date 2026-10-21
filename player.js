@@ -80,10 +80,10 @@
   const localOnly = {};
 
   const PLAYLIST = [
-    { title:'Lonely Day', artist:'Jurrivh',                 src:'lonely-day-jurrivh.mp3',   cover:'cover-lonely-day.jpg',   dur:242.21 },
-    { title:'2017',       artist:'Ólafur Arnalds',          src:'2017-olafur-arnalds.mp3',  cover:'cover-2017-olafur-arnalds.jpg',  dur:355.24 },
-    { title:'Epilogue',   artist:'Ólafur Arnalds',          src:'epilogue-olafur-arnalds.mp3',    cover:'cover-epilogue-olafur-arnalds.jpg',   dur:249.08 },
-    { title:'This Place Is a Shelter', artist:'Ólafur Arnalds', src:'this-place-is-a-shelter-olafur-arnalds.mp3', cover:'cover-this-place-is-a-shelter-olafur-arnalds.jpg', dur:138.36 }
+    { title:'Lonely Day', artist:'Jurrivh',                 src:'/lonely-day-jurrivh.mp3',   cover:'/cover-lonely-day.jpg',   dur:242.21 },
+    { title:'2017',       artist:'Ólafur Arnalds',          src:'/2017-olafur-arnalds.mp3',  cover:'/cover-2017-olafur-arnalds.jpg',  dur:355.24 },
+    { title:'Epilogue',   artist:'Ólafur Arnalds',          src:'/epilogue-olafur-arnalds.mp3',    cover:'/cover-epilogue-olafur-arnalds.jpg',   dur:249.08 },
+    { title:'This Place Is a Shelter', artist:'Ólafur Arnalds', src:'/this-place-is-a-shelter-olafur-arnalds.mp3', cover:'/cover-this-place-is-a-shelter-olafur-arnalds.jpg', dur:138.36 }
   ];
 
   const artImg   = document.getElementById('artImg');
