@@ -8,6 +8,7 @@
   var DATA = []; var VIEW = [];
   var st = { cat: 'All', q: '', tag: '' };
   var gview = 'grid';   // 视图：grid | timeline（localStorage 记忆）
+  var loadFailed = false;  // gallery.json 加载失败（区别于「没有图片」）
   var protectDone = false;
   var bootedFor = null;
   function getPage(){
@@ -29,7 +30,7 @@
   function load() {
     // 静态图集 + 站长在后台改过的文案（KV 覆盖），合并后再渲染
     return Promise.all([
-      fetch('/gallery/gallery.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).catch(function () { return { items: [] }; }),
+      fetch('/gallery/gallery.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).catch(function () { loadFailed = true; return { items: [] }; }),
       fetch(WORKER + '/gallery-meta', { cache: 'no-store' }).then(function (r) { return r.json(); }).catch(function () { return null; })
     ]).then(function (res) {
       var j = res[0], m = res[1];
@@ -42,6 +43,11 @@
         if (o.category) it.category = o.category;
         if (o.tags && o.tags.length) it.tags = o.tags;
         if (o.date) it.date = o.date;
+      });
+      // 响应式档位（由 id 推导，不写进 gallery.json）
+      DATA.forEach(function (it) {
+        it.displaySm = '/images/gallery/display-sm/' + it.id + '.webp';
+        it.thumbSm = '/images/gallery/thumbnails-sm/' + it.id + '.webp';
       });
       return DATA;
     }).catch(function () { DATA = []; return DATA; });
@@ -64,6 +70,15 @@
     var scale=1, tx=0, ty=0, pointers={}, pinchStart=null, panning=false, panStart=null;
     var preloaded = {};
     function preload(x){ if(!x) return; var u=x.display||x.thumbnail; if(!u||preloaded[u]) return; preloaded[u]=1; var im=new Image(); im.src=u; }
+    var lastFocus=null;
+    function trapTab(e){ // 灯箱内 Tab 焦点循环（无障碍）
+      if(e.key!=='Tab' || !root) return;
+      var f=root.querySelectorAll('button:not([disabled]), [href], input, [tabindex]:not([tabindex="-1"])');
+      if(!f.length) return;
+      var first=f[0], last=f[f.length-1];
+      if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+      else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+    }
     function ensureBuilt() {
       if (built) return;
       built = true;
@@ -103,8 +118,13 @@
     function onUp(e){ var moved=panStart?Math.hypot(e.clientX-panStart.x,e.clientY-panStart.y):0; var dt=panStart?Date.now()-panStart.t:0;
       delete pointers[e.pointerId]; if(pinchStart && Object.keys(pointers).length<2) pinchStart=null; panning=false;
       if(scale===1 && moved>60 && dt<500) go(e.clientX-panStart.x>0?-1:1); panStart=null; }
-    function open(list,index){ ensureBuilt(); cur=list; idx=index; document.body.style.overflow='hidden';
-      requestAnimationFrame(function(){ root.classList.add('show'); root.setAttribute('aria-hidden','false'); }); render(); }
+    function open(list,index){ ensureBuilt(); cur=list; idx=index; lastFocus=document.activeElement; document.body.style.overflow='hidden';
+      requestAnimationFrame(function(){
+        root.classList.add('show'); root.setAttribute('aria-hidden','false');
+        var c=document.getElementById('lbClose'); if(c) c.focus();   // 必须等 display 生效后再聚焦
+      });
+      document.addEventListener('keydown', trapTab);
+      render(); }
     function render(){ var it=cur[idx]; resetZoom(); img.src=it.display||it.thumbnail; img.alt=it.title||'';
       // 预加载相邻图片，下一张/上一张几乎瞬时
       if(cur.length>1){ preload(cur[(idx+1)%cur.length]); preload(cur[(idx-1+cur.length)%cur.length]); }
@@ -118,7 +138,10 @@
       if(navigator.share){ navigator.share({title:(it.title||'Photo')+' · Gallery',text:it.title||'',url:url}).catch(function(){}); }
       else copy(url,'Link copied'); }
     function toComments(){ var id=cur[idx].id; close(); if(isPhoto()){ var el=document.getElementById('comments'); if(el) el.scrollIntoView({behavior:'smooth'}); } else if(window.SPA){ window.SPA.navigate('/gallery/'+id+'/#comments'); } else { location.href='/gallery/'+id+'/#comments'; } }
-    function close(){ if(!root) return; root.classList.remove('show'); root.setAttribute('aria-hidden','true'); document.body.style.overflow=''; img.removeAttribute('src'); }
+    function close(){ if(!root) return; root.classList.remove('show'); root.setAttribute('aria-hidden','true'); document.body.style.overflow=''; img.removeAttribute('src');
+      document.removeEventListener('keydown', trapTab);
+      if(lastFocus && lastFocus.focus && lastFocus!==document.body){ try{ lastFocus.focus(); }catch(e){} }
+      lastFocus=null; }
     // 离开 gallery/photo 页时销毁：Lightbox 挂在 body（#view 之外），其样式在 gallery.css；
     // 若不销毁，返回主页后 gallery.css 被 router 移除 → Lightbox 丢失 display:none 变成裸块。
     function destroy(){
@@ -136,6 +159,20 @@
   document.addEventListener('keydown', function (e) {
     var lb=$('#galleryLB'); if(!lb || !lb.classList.contains('show')) return;
     if(e.key==='Escape') LB.close(); else if(e.key==='ArrowRight') LB.go(1); else if(e.key==='ArrowLeft') LB.go(-1);
+  });
+
+  // 图片页：← / → 切上一张 / 下一张（灯箱打开时由灯箱自己处理，不重复触发）
+  document.addEventListener('keydown', function (e) {
+    if (getPage() !== 'photo') return;
+    var lb=$('#galleryLB'); if(lb && lb.classList.contains('show')) return;
+    var t=e.target; if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+    if(e.key!=='ArrowLeft' && e.key!=='ArrowRight') return;
+    var pid=document.body.dataset.photoId||'', cur=null;
+    for(var i=0;i<DATA.length;i++){ if(DATA[i].id===pid){ cur=DATA[i]; break; } }
+    if(!cur) return;
+    var j=DATA.indexOf(cur);
+    var nxt=DATA[(j+(e.key==='ArrowRight'?1:-1)+DATA.length)%DATA.length];
+    if(nxt && nxt.id!==cur.id) location.href='/gallery/'+nxt.id+'/';
   });
 
   // SPA 离开 gallery/photo 时销毁 Lightbox（它挂在 body 上，样式却在 gallery.css，留到主页会裸奔）
@@ -161,8 +198,10 @@
     function cardHtml(it, i){
       var ar=it.width&&it.height?('aspect-ratio:'+it.width+'/'+it.height):'aspect-ratio:4/3';
       var ovm=[it.category,it.date,it.width?(it.width+'×'+it.height):''].filter(Boolean).join(' · ');
+      var srcset=(it.thumbSm && it.thumbnail)?(it.thumbSm+' 480w, '+it.thumbnail+' 720w'):'';
       return '<div class="card" data-i="'+i+'" role="button" tabindex="0" aria-label="'+esc(it.title||'')+'">'+
-        '<div class="ph" style="'+ar+'"><img src="'+esc(it.thumbnail)+'" width="'+(it.width||'')+'" height="'+(it.height||'')+
+        '<div class="ph" style="'+ar+'"><img src="'+esc(it.thumbnail)+'"'+(srcset?' srcset="'+esc(srcset)+'"':'')+
+        ' sizes="(max-width: 560px) 92vw, (max-width: 900px) 46vw, 322px" width="'+(it.width||'')+'" height="'+(it.height||'')+
         '" alt="'+esc(it.title||'')+'" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+' decoding="async">'+
         '<div class="ov"><div class="ovt">'+esc(it.title||'')+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
     }
@@ -170,7 +209,10 @@
       var imgs=root.querySelectorAll('.card img');
       for(var j=0;j<imgs.length;j++){ (function(im){ function on(){im.classList.add('loaded');} if(im.complete)on(); else im.addEventListener('load',on); })(imgs[j]); }
     }
-    function emptyHtml(){ return '<div class="empty">'+ (DATA.length?'没有匹配的图片':'还没有照片 · 去 gallery.json 添加或在管理后台上传') +'</div>'; }
+    function emptyHtml(){
+      if (loadFailed) return '<div class="empty">图片数据加载失败，请检查网络后刷新重试</div>';
+      return '<div class="empty">'+ (DATA.length?'没有匹配的图片':'还没有照片 · 去 gallery.json 添加或在管理后台上传') +'</div>';
+    }
     function renderGrid(list){
       grid.className='grid';
       if(!list.length){ grid.innerHTML=emptyHtml(); return; }
@@ -204,8 +246,14 @@
       if(gview==='timeline') renderTimeline(list); else renderGrid(list);
       if(gcount) gcount.textContent=list.length+' 张'+(list.length!==DATA.length?(' / '+DATA.length):'');
     }
-    function renderCats(){ var set=['All']; DATA.forEach(function(it){ if(it.category && set.indexOf(it.category)<0) set.push(it.category); });
-      cats.innerHTML=set.map(function(c){ return '<button class="cat'+(c===st.cat?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'</button>'; }).join(''); }
+    function renderCats(){
+      var set=['All'], counts={All:DATA.length};
+      DATA.forEach(function(it){ if(it.category && set.indexOf(it.category)<0) set.push(it.category); });
+      DATA.forEach(function(it){ if(it.category) counts[it.category]=(counts[it.category]||0)+1; });
+      cats.innerHTML=set.map(function(c){
+        return '<button class="cat'+(c===st.cat?' on':'')+'" data-cat="'+esc(c)+'">'+esc(c)+'<span class="cat-n">'+(counts[c]||0)+'</span></button>';
+      }).join('');
+    }
     cats.addEventListener('click',function(e){ var b=e.target.closest('.cat'); if(!b)return; st.cat=b.dataset.cat; st.tag=''; apply(); });
     if(gsearch) gsearch.addEventListener('input',function(){ st.q=gsearch.value.trim(); apply(); });
     if(gviews) gviews.addEventListener('click',function(e){
@@ -213,6 +261,14 @@
       gview=b.dataset.v;
       try{ localStorage.setItem('gview', gview); }catch(err){}
       apply();
+    });
+    // 按 / 快速聚焦搜索框
+    document.addEventListener('keydown', function(e){
+      if (getPage() !== 'gallery') return;
+      if (e.key !== '/') return;
+      var t=e.target; if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA')) return;
+      e.preventDefault();
+      var s=document.getElementById('gsearch'); if(s) s.focus();
     });
     grid.addEventListener('click',function(e){ var c=e.target.closest('.card'); if(!c)return; LB.open(VIEW,+c.dataset.i); });
     grid.addEventListener('keydown',function(e){ if(e.key!=='Enter'&&e.key!==' ')return; var c=e.target.closest('.card'); if(!c)return; e.preventDefault(); LB.open(VIEW,+c.dataset.i); });
@@ -372,7 +428,11 @@
     window.paintPhoto = function (x, noCmt) {
       document.body.dataset.photoId = x.id;
       if (!noCmt) Cmt.load(x.id);   // Lightbox 切图后同步刷新评论区（否则会停留在上一张的评论）
-      img.src = x.display || x.thumbnail; img.alt = x.title || '';
+      img.src = x.display || x.thumbnail;
+      // 响应式：切图时同步 srcset/sizes，否则会继续用上一张的候选地址
+      if (x.displaySm && x.display){ img.srcset = x.displaySm + ' 1280w, ' + x.display + ' 1920w'; img.sizes = '(max-width: 900px) 100vw, 690px'; }
+      else { img.removeAttribute('srcset'); }
+      img.alt = x.title || '';
       document.title = (x.title || 'Photo') + ' · Gallery · linsong';
       $('.p-title').textContent = x.title || '';
       $('.p-cat').textContent = x.category || '';
