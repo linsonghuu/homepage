@@ -304,3 +304,22 @@ body{
 
 /* hidden 属性必须生效（否则 .admin-login 的 display:flex 会盖过 [hidden]，登录后表单还在） */
 [hidden]{display:none!important}
+
+/* ── 视图切换（网格 / 时间线）── */
+.gviews{display:flex;gap:2px;padding:2px;border:1px solid rgba(255,255,255,.12);border-radius:20px;flex:none}
+.gv{font-family:var(--mono);font-size:11px;letter-spacing:.04em;padding:6px 13px;border-radius:16px;border:none;background:transparent;color:#b9b9b9;cursor:pointer;transition:background .18s,color .18s}
+.gv:hover{color:#f5f5f5}
+.gv.on{background:rgba(255,255,255,.14);color:#f5f5f5}
+
+/* ── 时间线视图：按日期分组，竖线 + 圆点 ── */
+.tl{display:flex;flex-direction:column;gap:30px;padding-bottom:80px}
+.tl-group{position:relative;padding-left:28px}
+.tl-group::before{content:'';position:absolute;left:5px;top:16px;bottom:-30px;width:1px;background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,.05))}
+.tl-group:last-child::before{display:none}
+.tl-dot{position:absolute;left:0;top:6px;width:11px;height:11px;border-radius:50%;background:#f0f0f0;box-shadow:0 0 0 4px rgba(255,255,255,.08)}
+.tl-date{font-family:var(--mono);font-size:12.5px;letter-spacing:.05em;color:#f5f5f5;margin-bottom:13px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.tl-n{font-size:10px;opacity:.4;font-weight:400}
+.tl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:11px}
+
+/* 键盘焦点可见（无障碍） */
+:focus-visible{outline:2px solid rgba(255,255,255,.55);outline-offset:3px;border-radius:6px}
