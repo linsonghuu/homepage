@@ -7,7 +7,7 @@
   function setTok(t){ try{ t?sessionStorage.setItem('admin-token',t):sessionStorage.removeItem('admin-token'); }catch(e){} }
   function relTime(ts){ if(!ts) return ''; var s=Math.floor((Date.now()-ts)/1000); if(s<60)return s+'s ago'; if(s<3600)return Math.floor(s/60)+'m ago'; if(s<86400)return Math.floor(s/3600)+'h ago'; if(s<86400*30)return Math.floor(s/86400)+'d ago'; return new Date(ts).toLocaleDateString('zh-CN'); }
   function api(path, body){
-    var o={ headers:{} }; if(body){ o.method='POST'; o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body); }
+    var o={ headers:{}, cache:'no-store' }; if(body){ o.method='POST'; o.headers['Content-Type']='application/json'; o.body=JSON.stringify(body); }
     return fetch(WORKER+path+(body?'':'')+ (path.indexOf('?')>=0?'&':'?') + 'token='+encodeURIComponent(TOKEN||''), o)
       .then(function(r){ return r.json(); });
   }
