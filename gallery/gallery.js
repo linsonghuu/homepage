@@ -195,6 +195,13 @@
       var bs=gviews.querySelectorAll('.gv');
       for(var i=0;i<bs.length;i++){ bs[i].classList.toggle('on', bs[i].dataset.v === gview); }
     }
+    function hl(text){ // 搜索命中高亮（其余部分转义）
+      var t=String(text||'');
+      if(!st.q) return esc(t);
+      var i=t.toLowerCase().indexOf(st.q.toLowerCase());
+      if(i<0) return esc(t);
+      return esc(t.slice(0,i))+'<mark>'+esc(t.slice(i,i+st.q.length))+'</mark>'+esc(t.slice(i+st.q.length));
+    }
     function cardHtml(it, i){
       var ar=it.width&&it.height?('aspect-ratio:'+it.width+'/'+it.height):'aspect-ratio:4/3';
       var ovm=[it.category,it.date,it.width?(it.width+'×'+it.height):''].filter(Boolean).join(' · ');
@@ -203,11 +210,16 @@
         '<div class="ph" style="'+ar+'"><img src="'+esc(it.thumbnail)+'"'+(srcset?' srcset="'+esc(srcset)+'"':'')+
         ' sizes="(max-width: 560px) 92vw, (max-width: 900px) 46vw, 322px" width="'+(it.width||'')+'" height="'+(it.height||'')+
         '" alt="'+esc(it.title||'')+'" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+' decoding="async">'+
-        '<div class="ov"><div class="ovt">'+esc(it.title||'')+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
+        '<div class="ov"><div class="ovt">'+hl(it.title)+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
     }
     function bindImgLoad(root){
       var imgs=root.querySelectorAll('.card img');
-      for(var j=0;j<imgs.length;j++){ (function(im){ function on(){im.classList.add('loaded');} if(im.complete)on(); else im.addEventListener('load',on); })(imgs[j]); }
+      for(var j=0;j<imgs.length;j++){ (function(im){
+        function on(){im.classList.add('loaded');}
+        function err(){ im.classList.add('loaded','imgerr'); var ph=im.closest('.ph'); if(ph) ph.classList.add('imgerr'); }
+        if(im.complete){ im.naturalWidth ? on() : err(); }
+        else { im.addEventListener('load',on); im.addEventListener('error',err); }
+      })(imgs[j]); }
     }
     function emptyHtml(){
       if (loadFailed) return '<div class="empty">图片数据加载失败，请检查网络后刷新重试</div>';
@@ -425,6 +437,15 @@
     var list = DATA;
     var img = $('#photoImg');
     function res(x){ return x.width ? (x.width + ' × ' + x.height) : ''; }
+    function relDate(d){
+      var t=Date.parse(d+'T00:00:00');
+      if(isNaN(t)) return '';
+      var s=Math.floor((Date.now()-t)/1000);
+      if(s<0) return '';
+      if(s<86400*30) return Math.floor(s/86400)+' 天前';
+      if(s<86400*365) return Math.floor(s/(86400*30))+' 个月前';
+      return Math.floor(s/(86400*365))+' 年前';
+    }
     window.paintPhoto = function (x, noCmt) {
       document.body.dataset.photoId = x.id;
       if (!noCmt) Cmt.load(x.id);   // Lightbox 切图后同步刷新评论区（否则会停留在上一张的评论）
@@ -436,7 +457,8 @@
       document.title = (x.title || 'Photo') + ' · Gallery · linsong';
       $('.p-title').textContent = x.title || '';
       $('.p-cat').textContent = x.category || '';
-      $('.p-date').textContent = x.date || '';
+      var dEl=$('.p-date'); dEl.textContent = x.date || '';
+      if(x.date){ var rd=relDate(x.date); if(rd) dEl.textContent = x.date + ' · ' + rd; }
       $('.p-res').textContent = res(x);
       var desc=$('.p-desc'); desc.textContent = x.description || ''; desc.style.display = x.description ? '' : 'none';
       var tg=$('.p-tags'); tg.innerHTML=''; (x.tags||[]).forEach(function(t){ var a=document.createElement('a'); a.className='tag'; a.href='/gallery/?tag='+encodeURIComponent(t); a.textContent='#'+t; tg.appendChild(a); });
@@ -446,6 +468,7 @@
     };
     function open(){ var cur=list.filter(function(x){return x.id===document.body.dataset.photoId;})[0]; LB.open(list, list.indexOf(cur)); }
     img.addEventListener('click', open); $('#openBtn').addEventListener('click', open); $('#zoomBtn').addEventListener('click', open);
+    img.addEventListener('error', function(){ var st=document.getElementById('photoStage'); if(st) st.classList.add('imgerr'); });
     $('#shareBtn').addEventListener('click', function(){
       var url=location.href.split('?')[0];
       if(navigator.share) navigator.share({title:document.title,url:url}).catch(function(){});
@@ -458,12 +481,23 @@
     if (new URLSearchParams(location.search).get('view') === '1') open();
   }
 
+  // 图集数据加载期间先画骨架屏，避免「加载中…」空白
+  function renderSkeleton(){
+    var g=document.getElementById('grid'); if(!g) return;
+    if(g.querySelector('.card') || g.querySelector('.sk-card')) return;
+    g.className='sk-grid';
+    var h='';
+    for(var i=0;i<6;i++) h+='<div class="sk-card"></div>';
+    g.innerHTML=h;
+  }
+
   function boot() {
     var key = location.pathname + location.search;
     if (bootedFor === key) return;
     bootedFor = key;
     var p = getPage();
     if (p !== 'gallery' && p !== 'photo') return; // 仅 gallery / 照片页需要初始化
+    if (p === 'gallery') renderSkeleton();
     load().then(function () {
       if (getPage() !== p) return; // 已离开该页（异步竞态），放弃初始化，避免对不存在的元素报错
       protect();
