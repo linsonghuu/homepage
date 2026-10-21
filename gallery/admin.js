@@ -26,7 +26,6 @@
       var list=d.comments||[]; var box=$('#aList'); box.innerHTML='';
       $('#aEmpty').hidden=list.length>0;
       var pend=0;
-      d.comments.forEach(function(){});
       list.forEach(function(c){ if(c.status==='pending') pend++; box.appendChild(row(c)); });
       $('#nPending').textContent=pend;
     }).catch(function(){});
