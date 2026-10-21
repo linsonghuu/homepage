@@ -63,33 +63,23 @@ body{
 .gsearch:focus{border-color:rgba(255,255,255,.3)}
 
 /* ── 瀑布流 ── */
-.grid{display:flex;flex-direction:column;gap:16px;padding-bottom:80px}
-.grid .cards{columns:3;column-gap:16px}
-@media (max-width:900px){ .grid .cards{columns:2} .feat{max-width:100%} }
-@media (max-width:560px){ .grid .cards{columns:1} }
-
-/* 最新一张：大图 hero（宽度按 60vh × 宽高比，竖图也不会过宽） */
-.feat{position:relative;width:100%;max-width:calc(60vh * var(--ar,1.7778));margin:0 auto;
-  border-radius:var(--r-card);overflow:hidden;background:var(--cell);border:1px solid rgba(255,255,255,.1);
-  cursor:zoom-in;transition:border-color .3s}
-.feat:hover{border-color:rgba(255,255,255,.24)}
-.feat-ph{position:relative;width:100%;overflow:hidden}
-.feat-ph img{width:100%;height:auto;display:block;opacity:0;transition:opacity .6s ease, transform .6s cubic-bezier(.22,1,.36,1)}
-.feat-ph img.loaded{opacity:1}
-.feat:hover .feat-ph img{transform:scale(1.03)}
-.feat-tag{position:absolute;top:14px;left:14px;z-index:2;font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;
-  padding:4px 10px;border-radius:14px;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.18);color:#f0f0f0;backdrop-filter:blur(6px)}
-.feat-ov{position:absolute;left:0;right:0;bottom:0;padding:30px 26px 22px;text-align:left;pointer-events:none;
-  background:linear-gradient(180deg,transparent,rgba(0,0,0,.5) 45%,rgba(0,0,0,.88) 100%)}
-.feat-t{font-size:clamp(18px,2.6vw,26px);font-weight:700;line-height:1.2}
-.feat-d{margin-top:8px;font-size:13px;line-height:1.65;opacity:.78;max-width:620px}
-.feat-m{margin-top:10px;font-family:var(--mono);font-size:10px;opacity:.55;letter-spacing:.04em}
+/* ── 瀑布流：JS 按「最短列」放置 ──
+   保持图片原始比例（不裁切），左→右、上→下 的阅读顺序；resize 重新排布 */
+.grid{position:relative;padding-bottom:80px}
+/* 只有 JS 成功排版后才加 .masonry：没 JS 时卡片保持静态可见（渐进增强） */
+.grid.masonry > .card{
+  position:absolute;top:0;left:0;width:auto;margin:0;
+  opacity:0;animation:cardIn .5s ease both;animation-delay:var(--d,0s);
+  transition:border-color .3s, box-shadow .4s, transform .4s cubic-bezier(.22,1,.36,1);
+}
+@keyframes cardIn{from{opacity:0}to{opacity:1}}
+.grid.masonry > .card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.22);box-shadow:0 20px 44px -22px rgba(0,0,0,.95)}
 .card{
-  break-inside:avoid;-webkit-column-break-inside:avoid;
-  margin:0 0 16px;position:relative;border-radius:var(--r-mid);overflow:hidden;
-  background:var(--cell);border:1px solid rgba(255,255,255,.08);
-  cursor:zoom-in;display:block;width:100%;
-  transition:border-color .3s, transform .4s cubic-bezier(.22,1,.36,1);
+  position:relative;width:100%;margin:0;
+  border-radius:var(--r-mid);overflow:hidden;background:var(--cell);
+  border:1px solid rgba(255,255,255,.08);
+  cursor:zoom-in;display:block;
+  transition:border-color .3s, transform .4s cubic-bezier(.22,1,.36,1), box-shadow .4s;
 }
 .card:hover{border-color:rgba(255,255,255,.2)}
 .card .ph{position:relative;width:100%;background:linear-gradient(110deg,#0c0c0c 8%,#151515 18%,#0c0c0c 33%);background-size:200% 100%;animation:shimmer 1.4s linear infinite}
