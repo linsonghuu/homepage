@@ -327,3 +327,13 @@ body{
 /* 分类计数 + 快捷键提示 */
 .cats .cat-n{margin-left:5px;font-size:9px;opacity:.5;font-weight:400}
 .ghead kbd{font-family:var(--mono);font-size:10px;padding:1px 5px;border:1px solid rgba(255,255,255,.16);border-radius:4px;background:rgba(255,255,255,.05);margin:0 1px}
+
+/* ── 骨架屏 / 图片加载失败 / 搜索高亮 / 减少动画 ── */
+.sk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:11px;padding-bottom:80px}
+.sk-card{aspect-ratio:4/3;border-radius:var(--r-card);background:linear-gradient(110deg,#0c0c0c 8%,#151515 18%,#0c0c0c 33%);background-size:200% 100%;animation:shimmer 1.4s linear infinite}
+.card .ph.imgerr::after,.photo-stage.imgerr::after{content:'图片加载失败';position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:10px;opacity:.4}
+.card .ov mark{background:rgba(255,255,255,.22);color:#fff;border-radius:2px;padding:0 1px}
+@media (prefers-reduced-motion: reduce){
+  .card .ph,.sk-card{animation:none}
+  .card,.ov,.gv,.m-btn,.cat,.c-more,a{transition:none!important}
+}
