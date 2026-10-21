@@ -1,67 +1,38 @@
 {
   "ok": true,
-  "total": 11,
-  "unique": 5,
+  "total": 132,
+  "unique": 2,
   "visitors": [
     {
       "fp": "7a81898d",
       "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
       "platform": "Windows",
       "gpu": "ANGLE (AMD, AMD Radeon RX 9070 XT (0x00007550) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "67.159.48.148",
+      "ip": "67.159.48.147",
       "city": "Singapore · SG",
       "first": 1792480590766,
-      "last": 1792490252884,
-      "count": 7,
+      "last": 1792583657271,
+      "count": 120,
       "verdict": "human",
-      "webdriver": false
+      "webdriver": false,
+      "asn": 30058,
+      "org": "FDCservers.net",
+      "tz": "Asia/Singapore",
+      "colo": "HKG"
     },
     {
-      "fp": "3a4dd7c7",
-      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0",
-      "platform": "Windows",
-      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce RTX 4060 Laptop GPU (0x000028A0) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "179.253.247.204",
-      "city": "Los Angeles · US",
-      "first": 1792490235079,
-      "last": 1792490235079,
+      "fp": "1f8ae7ee",
+      "ua": "Mozilla/5.0 (Linux; Android 16; 25113PN0EG Build/BP2A.250605.031.A3; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/155.0.8059.73 Mobile Safari/537.36 Instagram 451.0.0.53.80 Android (36/16; 520dpi; 1220x2656; Xiaomi; 25113PN0EG; pudding; qcom; zh_TW; 1089933786; IABMV/1)",
+      "platform": "Android",
+      "gpu": "Adreno (TM) 840",
+      "ip": "210.59.149.197",
+      "city": "Taichung · TW",
+      "first": 1792575964495,
+      "last": 1792575964495,
       "count": 1,
       "verdict": "human",
       "webdriver": false
-    },
-    {
-      "fp": "408af26b",
-      "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
-      "platform": "Windows",
-      "gpu": "ANGLE (NVIDIA, NVIDIA GeForce GTX 1060 Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "72.153.230.168",
-      "city": "San Jose · US",
-      "first": 1792471573177,
-      "last": 1792471573177,
-      "count": 1
-    },
-    {
-      "fp": "75e3e13c",
-      "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0",
-      "platform": "Windows",
-      "gpu": "ANGLE (Intel, Intel(R) HD Graphics 620 (0x00005916) Direct3D11 vs_5_0 ps_5_0, D3D11)",
-      "ip": "2001:41d0:801:2000::6587",
-      "city": "Erith · GB",
-      "first": 1792454493921,
-      "last": 1792454493921,
-      "count": 1
-    },
-    {
-      "fp": "d4f8e800",
-      "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1",
-      "platform": "Linux x86_64",
-      "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
-      "ip": "54.202.22.91",
-      "city": "Boardman · US",
-      "first": 1792451236343,
-      "last": 1792451236343,
-      "count": 1
     }
   ],
-  "syncedAt": 1792491793547
+  "syncedAt": 1792583658186
 }
