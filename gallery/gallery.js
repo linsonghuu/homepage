@@ -26,10 +26,24 @@
   }
 
   function load() {
-    return fetch('/gallery/gallery.json', { cache: 'no-cache' })
-      .then(function (r) { return r.json(); })
-      .then(function (j) { DATA = (j && j.items) || []; return DATA; })
-      .catch(function () { return []; });
+    // 静态图集 + 站长在后台改过的文案（KV 覆盖），合并后再渲染
+    return Promise.all([
+      fetch('/gallery/gallery.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).catch(function () { return { items: [] }; }),
+      fetch(WORKER + '/gallery-meta', { cache: 'no-store' }).then(function (r) { return r.json(); }).catch(function () { return null; })
+    ]).then(function (res) {
+      var j = res[0], m = res[1];
+      DATA = (j && j.items) || [];
+      var map = (m && m.ok && m.meta) || {};
+      DATA.forEach(function (it) {
+        var o = map[it.id]; if (!o) return;
+        if (o.title) it.title = o.title;
+        if (o.desc != null && o.desc !== '') it.description = o.desc;
+        if (o.category) it.category = o.category;
+        if (o.tags && o.tags.length) it.tags = o.tags;
+        if (o.date) it.date = o.date;
+      });
+      return DATA;
+    }).catch(function () { DATA = []; return DATA; });
   }
 
   // ---- 图片辅助防护：禁右键 / 禁拖拽 / 禁选中 ----
@@ -297,10 +311,11 @@
     var list = DATA;
     var img = $('#photoImg');
     function res(x){ return x.width ? (x.width + ' × ' + x.height) : ''; }
-    window.paintPhoto = function (x) {
+    window.paintPhoto = function (x, noCmt) {
       document.body.dataset.photoId = x.id;
-      Cmt.load(x.id);   // Lightbox 切图后同步刷新评论区（否则会停留在上一张的评论）
+      if (!noCmt) Cmt.load(x.id);   // Lightbox 切图后同步刷新评论区（否则会停留在上一张的评论）
       img.src = x.display || x.thumbnail; img.alt = x.title || '';
+      document.title = (x.title || 'Photo') + ' · Gallery · linsong';
       $('.p-title').textContent = x.title || '';
       $('.p-cat').textContent = x.category || '';
       $('.p-date').textContent = x.date || '';
@@ -318,6 +333,9 @@
       if(navigator.share) navigator.share({title:document.title,url:url}).catch(function(){});
       else { var ta=document.createElement('textarea'); ta.value=url; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} ta.remove(); LB.toast('Link copied'); }
     });
+    // 应用后台改过的文案（大标题 / 小标题 / 分类 / 标签 / 日期）；noCmt 避免与下面的 Cmt.init 重复请求
+    var cur = DATA.filter(function(x){ return x.id === document.body.dataset.photoId; })[0];
+    if (cur) paintPhoto(cur, true);
     Cmt.init();
     if (new URLSearchParams(location.search).get('view') === '1') open();
   }
