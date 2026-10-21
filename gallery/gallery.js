@@ -181,6 +181,42 @@
     if (p !== 'gallery' && p !== 'photo') LB.destroy();
   });
 
+  // ── 瀑布流核心：按「最短列」放置卡片 ──
+  // 用图片自身宽高比算高度（不裁切、不扭曲），左→右、上→下 的阅读顺序；
+  // resize 时重排；卡片逐个淡入（.in）。
+  function layoutMasonry(g){
+    if(!g) return;
+    var cards=Array.prototype.slice.call(g.querySelectorAll('.card'));
+    if(!cards.length) return;
+    var cw=g.clientWidth;
+    if(!cw) return;
+    var cols = cw > 900 ? 3 : (cw > 560 ? 2 : 1);
+    var gap = 16;
+    var colW = Math.floor((cw - gap*(cols-1))/cols);
+    var ys=[];
+    for(var i=0;i<cols;i++) ys.push(0);
+    cards.forEach(function(c, k){
+      var ar=parseFloat(c.getAttribute('data-ar'))||0.75;
+      var h=Math.round(colW*ar);
+      var col=0;
+      for(var j=1;j<cols;j++){ if(ys[j]<ys[col]) col=j; }
+      c.style.width=colW+'px';
+      c.style.left=(col*(colW+gap))+'px';
+      c.style.top=ys[col]+'px';
+      ys[col]+=h+gap;
+    });
+    g.style.height=(Math.max.apply(null,ys)-gap)+'px';
+  }
+  var _rzT=null;
+  window.addEventListener('resize', function(){
+    if(getPage()!=='gallery') return;
+    clearTimeout(_rzT);
+    _rzT=setTimeout(function(){
+      var g=document.getElementById('grid');
+      if(g && g.className.indexOf('masonry')>=0) layoutMasonry(g);
+    },160);
+  });
+
   function initIndex() {
     var grid=$('#grid'), cats=$('#cats'), gcount=$('#gcount'), gsearch=$('#gsearch'), gviews=$('#gviews');
     var tag=new URLSearchParams(location.search).get('tag');
@@ -206,17 +242,19 @@
       var ar=it.width&&it.height?('aspect-ratio:'+it.width+'/'+it.height):'aspect-ratio:4/3';
       var ovm=[it.category,it.date,it.width?(it.width+'×'+it.height):''].filter(Boolean).join(' · ');
       var srcset=(it.thumbSm && it.thumbnail)?(it.thumbSm+' 480w, '+it.thumbnail+' 720w'):'';
-      return '<div class="card" data-i="'+i+'" role="button" tabindex="0" aria-label="'+esc(it.title||'')+'">'+
+      var dar=(it.width&&it.height)?(it.height/it.width):0.75;
+      var d=Math.min(i*0.055,0.7).toFixed(3);
+      return '<div class="card" data-i="'+i+'" data-ar="'+dar+'" style="--d:'+d+'s" role="button" tabindex="0" aria-label="'+esc(it.title||'')+'">'+
         '<div class="ph" style="'+ar+'"><img src="'+esc(it.thumbnail)+'"'+(srcset?' srcset="'+esc(srcset)+'"':'')+
         ' sizes="(max-width: 560px) 92vw, (max-width: 900px) 46vw, 322px" width="'+(it.width||'')+'" height="'+(it.height||'')+
         '" alt="'+esc(it.title||'')+'" loading="'+(i===0?'eager':'lazy')+'"'+(i===0?' fetchpriority="high"':'')+' decoding="async">'+
         '<div class="ov"><div class="ovt">'+hl(it.title)+'</div><div class="ovm">'+esc(ovm)+'</div></div></div></div>';
     }
     function bindImgLoad(root){
-      var imgs=root.querySelectorAll('.card img, .feat-ph img');
+      var imgs=root.querySelectorAll('.card img');
       for(var j=0;j<imgs.length;j++){ (function(im){
         function on(){im.classList.add('loaded');}
-        function err(){ im.classList.add('loaded','imgerr'); var ph=im.closest('.ph')||im.closest('.feat-ph'); if(ph) ph.classList.add('imgerr'); }
+        function err(){ im.classList.add('loaded','imgerr'); var ph=im.closest('.ph'); if(ph) ph.classList.add('imgerr'); }
         if(im.complete){ im.naturalWidth ? on() : err(); }
         else { im.addEventListener('load',on); im.addEventListener('error',err); }
       })(imgs[j]); }
@@ -226,28 +264,11 @@
       return '<div class="empty">'+ (DATA.length?'没有匹配的图片':'还没有照片 · 去 gallery.json 添加或在管理后台上传') +'</div>';
     }
     function renderGrid(list){
-      grid.className='grid';
+      grid.className='grid masonry';
       if(!list.length){ grid.innerHTML=emptyHtml(); return; }
-      var html='', offset=0;
-      // 最新一张做成大图 hero（至少 3 张时才用，太少会显得空）；宽度按 60vh×宽高比，竖图也不会过宽
-      if(list.length >= 3){
-        var f=list[0];
-        var ar=(f.width&&f.height)?(f.width/f.height):1.7778;
-        var fstyle=(f.width&&f.height)?('aspect-ratio:'+f.width+'/'+f.height):'aspect-ratio:16/9';
-        var fsrc=(f.displaySm&&f.display)?(' srcset="'+f.displaySm+' 1280w, '+f.display+' 1920w" sizes="(max-width: 900px) 100vw, calc(60vh * '+ar.toFixed(3)+')"'):'';
-        html+='<div class="feat" data-i="0" role="button" tabindex="0" aria-label="'+esc(f.title||'')+'" style="--ar:'+ar.toFixed(4)+'">'
-          +'<div class="feat-ph" style="'+fstyle+'"><img src="'+esc(f.display||f.thumbnail)+'"'+fsrc+' alt="'+esc(f.title||'')+'" loading="eager" fetchpriority="high" decoding="async"></div>'
-          +'<span class="feat-tag">最新</span>'
-          +'<div class="feat-ov"><div class="feat-t">'+esc(f.title||'')+'</div>'
-          +(f.description?'<div class="feat-d">'+esc(f.description)+'</div>':'')
-          +'<div class="feat-m">'+esc([f.category,f.date].filter(Boolean).join(' · '))+'</div></div>'
-          +'</div>';
-        offset=1;
-      }
-      var rest=list.slice(offset);
-      if(rest.length) html+='<div class="cards">'+rest.map(function(it,i){ return cardHtml(it,i+offset); }).join('')+'</div>';
-      grid.innerHTML=html;
+      grid.innerHTML=list.map(function(it,i){ return cardHtml(it,i); }).join('');
       bindImgLoad(grid);
+      layoutMasonry(grid);
     }
     // 时间线：按日期分组（新的在上），竖线 + 圆点
     function renderTimeline(list){
@@ -302,13 +323,13 @@
       e.preventDefault();
       var s=document.getElementById('gsearch'); if(s) s.focus();
     });
-    grid.addEventListener('click',function(e){ var c=e.target.closest('.card, .feat'); if(!c)return; LB.open(VIEW,+c.dataset.i); });
+    grid.addEventListener('click',function(e){ var c=e.target.closest('.card'); if(!c)return; LB.open(VIEW,+c.dataset.i); });
     grid.addEventListener('keydown',function(e){
-      var c=e.target.closest('.card, .feat');
+      var c=e.target.closest('.card');
       if(e.key==='Enter'||e.key===' '){ if(!c) return; e.preventDefault(); LB.open(VIEW,+c.dataset.i); return; }
       if(e.key!=='ArrowRight'&&e.key!=='ArrowLeft'&&e.key!=='ArrowDown'&&e.key!=='ArrowUp') return;
       // 方向键在卡片间移动焦点（Enter 打开）
-      var cards=Array.prototype.slice.call(grid.querySelectorAll('.card, .feat'));
+      var cards=Array.prototype.slice.call(grid.querySelectorAll('.card'));
       var i=cards.indexOf(document.activeElement);
       if(i<0) return;
       var n=cards[i+((e.key==='ArrowRight'||e.key==='ArrowDown')?1:-1)];
